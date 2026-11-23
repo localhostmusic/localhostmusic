@@ -2602,6 +2602,8 @@ body.dragging-track .pl-card .pl-cover { outline: 2px dashed var(--border); outl
   }
   .np-focus button { border: 0; background: transparent; color: var(--muted); font-size: 12px; font-weight: 600; padding: 8px 12px; cursor: pointer; }
   .np-focus button.active { background: var(--accent); color: var(--accent-contrast); }
+  .np-layout-btn button { min-width: 54px; text-align: center; }
+  .np-focus button:disabled, .np-toggles .np-lyrics-toggle:disabled { opacity: 0.35; cursor: default; }
 
   /* --- Docked bottom transport bar --- */
   .np-dock {

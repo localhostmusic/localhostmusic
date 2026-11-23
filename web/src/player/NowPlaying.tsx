@@ -518,16 +518,19 @@ export function NowPlaying({ onClose, onOpenArtist, onOpenAlbum }: {
               })}
             </div>
           )}
-          {wide && layoutModes.length > 1 && (
-            <div className="np-focus" role="group" aria-label="Panel layout">
-              <button className={pref !== "auto" ? "active" : ""} onClick={cycleLayout}
-                title="Cycle panel layout (Auto / columns / stacked squares)">
+          {/* Always rendered, disabled when they don't apply, so the row never shifts. */}
+          {wide && (
+            <div className="np-focus np-layout-btn" role="group" aria-label="Panel layout">
+              <button className={pref !== "auto" && layoutModes.length > 1 ? "active" : ""} onClick={cycleLayout}
+                disabled={layoutModes.length <= 1}
+                title={layoutModes.length > 1 ? "Cycle panel layout (Auto / columns / stacked squares)" : "Open more panels to change the layout"}>
                 {LAYOUT_LABEL[pref]}
               </button>
             </div>
           )}
-          {wide && lyricsActive && (
-            <button className="np-lyrics-toggle" onClick={() => setSyncing(true)} aria-label="Sync lyrics" title="Sync lyrics">
+          {wide && (
+            <button className="np-lyrics-toggle" onClick={() => setSyncing(true)} disabled={!lyricsActive}
+              aria-label="Sync lyrics" title={lyricsActive ? "Sync lyrics" : "Open Lyrics to sync them"}>
               <EditIcon size={20} />
             </button>
           )}
