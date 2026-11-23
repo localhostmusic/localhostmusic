@@ -10,7 +10,18 @@ import { seedGenresFromTags } from "./genres.js";
 // optional audiobooks root (skipped when unset, missing, or the same as the music
 // dir). Classification runs last so audiobooks-root content is flagged whichever
 // scanner (JS or Go sidecar) ran. Returns combined counts and how many albums flipped.
+let active = 0;
+export const isScanning = () => active > 0;
+
 export async function scanAll(
+  db: Database.Database, dataDir: string
+): Promise<ScanResult & { books: number; removed: number }> {
+  active++;
+  try { return await runScan(db, dataDir); }
+  finally { active--; }
+}
+
+async function runScan(
   db: Database.Database, dataDir: string
 ): Promise<ScanResult & { books: number; removed: number }> {
   const s = getSettings(db);

@@ -117,7 +117,7 @@ function StorageSettings() {
   useEffect(() => { load(); }, []);
 
   // Live progress while the pre-warm job runs.
-  const running = !!s?.prewarm?.running;
+  const running = !!s?.prewarm?.running || !!s?.scanning;
   useEffect(() => {
     if (!running) return;
     const t = setInterval(load, 2500);
@@ -130,7 +130,8 @@ function StorageSettings() {
       const r = await api.saveAdminSettings({ musicDir: musicDir.trim(), audiobookDir: audiobookDir.trim(), transcodeDir: transcodeDir.trim(), ...over });
       // Reflect the server's saved values back into the fields so "unsaved" clears.
       if (r.settings) { setMusicDir(r.settings.musicDir ?? ""); setAudiobookDir(r.settings.audiobookDir ?? ""); setTranscodeDir(r.settings.transcodeDir ?? ""); }
-      setPathMsg(r.scanning ? "Saved ✓ Scanning the new folder. Music appears as it is found." : r.rescan ? `Saved ✓ Rescanned: +${r.rescan.added} tracks, +${r.rescan.books ?? 0} audiobooks.` : "Saved ✓");
+      if (r.settings) setS((prev: any) => prev && { ...prev, ...r.settings, scanning: !!r.scanning });
+      setPathMsg(r.scanning ? "Scan finished." : r.rescan ? `Saved ✓ Rescanned: +${r.rescan.added} tracks, +${r.rescan.books ?? 0} audiobooks.` : "Saved ✓");
       load();
     } catch (e: any) { setPathErr(e?.message ?? "Could not save. Check the path exists on the server."); }
     finally { setBusy(false); }
@@ -199,6 +200,7 @@ function StorageSettings() {
   const pathsDirty = musicDir.trim() !== (s.musicDir ?? "")
     || audiobookDir.trim() !== (s.audiobookDir ?? "")
     || transcodeDir.trim() !== (s.transcodeDir ?? "");
+  const foldersDirty = musicDir.trim() !== (s.musicDir ?? "") || audiobookDir.trim() !== (s.audiobookDir ?? "");
   return (
     <section className="card">
       <h2>Storage &amp; transcoding</h2>
@@ -210,14 +212,14 @@ function StorageSettings() {
       <label className="field-label">Music library path</label>
       <div className="field-row">
         <input value={musicDir} onChange={e => setMusicDir(e.target.value)} placeholder={s.defaults?.musicDir} spellCheck={false} />
-        {pickFolder && <button className="btn" disabled={busy} onClick={async () => { const dir = await pickFolder(); if (dir) { setMusicDir(dir); savePaths({ musicDir: dir, background: true }); } }}>Browse…</button>}
+        {pickFolder && <button className="btn" disabled={busy} onClick={async () => { const dir = await pickFolder(); if (dir) setMusicDir(dir); }}>Browse…</button>}
         <button className="btn" onClick={() => openFolder("music")} disabled={!s.musicDir} title="Open in the file manager on the machine running Localhost Music">Open</button>
         <button className="btn" onClick={() => copyPath(musicDir || s.musicDir, "music")}>{copied === "music" ? "Copied" : "Copy"}</button>
       </div>
       <label className="field-label">Audiobooks path (optional)</label>
       <div className="field-row">
         <input value={audiobookDir} onChange={e => setAudiobookDir(e.target.value)} placeholder="e.g. /media/audiobooks" spellCheck={false} />
-        {pickFolder && <button className="btn" disabled={busy} onClick={async () => { const dir = await pickFolder(); if (dir) { setAudiobookDir(dir); savePaths({ audiobookDir: dir, background: true }); } }}>Browse…</button>}
+        {pickFolder && <button className="btn" disabled={busy} onClick={async () => { const dir = await pickFolder(); if (dir) setAudiobookDir(dir); }}>Browse…</button>}
         <button className="btn" onClick={() => openFolder("audiobooks")} disabled={!audiobookDir.trim()} title="Open in the file manager on the machine running Localhost Music">Open</button>
         <button className="btn" onClick={() => copyPath(audiobookDir, "audiobooks")} disabled={!audiobookDir.trim()}>{copied === "audiobooks" ? "Copied" : "Copy"}</button>
       </div>
@@ -225,12 +227,23 @@ function StorageSettings() {
       <label className="field-label">Transcode cache path</label>
       <div className="field-row">
         <input value={transcodeDir} onChange={e => setTranscodeDir(e.target.value)} placeholder={s.defaults?.transcodeDir} spellCheck={false} />
-        <button className="btn primary" onClick={() => savePaths()} disabled={busy || !pathsDirty}>
+        <button className="btn primary" onClick={() => savePaths(foldersDirty ? { background: true } : {})} disabled={busy || !pathsDirty}>
           {busy ? "Saving…" : pathsDirty ? "Save paths" : "Saved ✓"}
         </button>
       </div>
-      {pathsDirty && !busy && <p className="muted" style={{ color: "var(--accent)" }}>Unsaved path changes. Click “Save paths” to apply and rescan.</p>}
-      {pathMsg && <p className="ok-msg">{pathMsg}</p>}
+      {foldersDirty && !busy && (
+        <div className="folder-change" role="status">
+          <div>
+            <strong>Folder change detected.</strong>
+            <span>Scan {musicDir.trim() !== (s.musicDir ?? "") ? musicDir.trim() : audiobookDir.trim() || "the library"} now?</span>
+          </div>
+          <button className="btn primary" onClick={() => savePaths({ background: true })}>Scan now</button>
+          <button className="btn" onClick={() => { setMusicDir(s.musicDir ?? ""); setAudiobookDir(s.audiobookDir ?? ""); }}>Keep current</button>
+        </div>
+      )}
+      {pathsDirty && !foldersDirty && !busy && <p className="muted" style={{ color: "var(--accent)" }}>Unsaved path changes. Click “Save paths” to apply.</p>}
+      {s.scanning && <p className="ok-msg">Scanning your library… {s.trackCount} tracks so far.</p>}
+      {pathMsg && !s.scanning && <p className="ok-msg">{pathMsg}</p>}
       {pathErr && <p className="err">{pathErr}</p>}
       <p className="muted">Type a folder path that exists on the server, then <strong>Save paths</strong> (it rescans automatically). <strong>Open</strong> launches the file manager on the machine hosting Localhost Music. It won’t do anything from a phone or remote browser, so use <strong>Copy</strong> there. The database itself stays in DATA_DIR (service config).</p>
 

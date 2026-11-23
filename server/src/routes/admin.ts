@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { hashPassword } from "../lib/auth.js";
-import { scanAll } from "../lib/libraryScan.js";
+import { isScanning, scanAll } from "../lib/libraryScan.js";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { config } from "../config.js";
@@ -233,6 +233,7 @@ export async function adminRoutes(app: FastifyInstance) {
       trackCount: (app.db.prepare("SELECT COUNT(*) AS n FROM tracks").get() as any).n,
       cache: tierStats(s.transcodeDir),
       prewarm: prewarmStatus(),
+      scanning: isScanning(),
     };
   });
 
