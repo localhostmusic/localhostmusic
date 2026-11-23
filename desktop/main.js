@@ -311,8 +311,13 @@ const fromApp = (event) => {
 function registerIpc() {
   ipcMain.handle("desktop:pick-folder", async (event) => {
     if (!fromApp(event)) return null;
+    // Start somewhere sensible. The dialog's own default can be a list of unmounted
+    // drives, which is a dead end on Linux desktops without a mount prompt.
+    const current = loadConfig().musicDir;
+    const start = [current, app.getPath("music"), app.getPath("home")].find((d) => d && fs.existsSync(d));
     const res = await dialog.showOpenDialog(mainWindow, {
       title: "Choose your music folder",
+      defaultPath: start,
       properties: ["openDirectory"],
     });
     return res.canceled ? null : res.filePaths[0];
@@ -326,7 +331,12 @@ function registerIpc() {
 
   ipcMain.handle("setup:local", async (event, dir) => {
     if (!fromWelcome(event)) return { error: "Not allowed." };
-    if (typeof dir !== "string" || !fs.existsSync(dir)) return { error: "That folder does not exist." };
+    if (typeof dir !== "string") return { error: "That folder does not exist." };
+    // Typed paths: allow ~ and stray quotes from a copied path.
+    dir = dir.trim().replace(/^["']|["']$/g, "").replace(/^~(?=$|[\\/])/, os.homedir());
+    let isDir = false;
+    try { isDir = fs.statSync(dir).isDirectory(); } catch { /* missing */ }
+    if (!isDir) return { error: "That folder does not exist." };
     saveConfig({ mode: "local", musicDir: dir });
     try {
       const base = await startLocal();

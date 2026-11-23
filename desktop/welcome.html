@@ -24,6 +24,7 @@
   .note { color: #8a8a94; font-size: 13px; margin: 10px 0 0; }
   .link { background: none; color: #b9b9c3; padding: 0; margin-top: 26px; text-decoration: underline; text-underline-offset: 3px; }
   .link:hover { color: #fff; }
+  .row { display: flex; gap: 8px; margin-top: 10px; }
   #remote { margin-top: 14px; display: none; gap: 8px; }
   #remote.open { display: flex; }
   input { flex: 1; min-width: 0; font: inherit; padding: 11px 13px; border-radius: 10px; border: 1px solid #2f2f38; background: #16161b; color: #fff; }
@@ -43,6 +44,10 @@
   <p class="current" id="current" hidden></p>
 
   <button class="primary" id="pick">Choose your music folder</button>
+  <form class="row" id="typed">
+    <input id="path" placeholder="or paste the folder path" spellcheck="false" autocomplete="off">
+    <button class="secondary" type="submit">Use</button>
+  </form>
   <p class="note">Your files stay where they are. Nothing is uploaded.</p>
 
   <button class="link" id="toggle">I already run a Localhost Music server</button>
@@ -74,6 +79,11 @@
     if (!dir) return { cancelled: true };
     return api.useFolder(dir);
   });
+  $("typed").onsubmit = e => {
+    e.preventDefault();
+    const dir = $("path").value.trim();
+    if (dir) run("Starting your library…", () => api.useFolder(dir));
+  };
   $("toggle").onclick = () => { $("remote").classList.toggle("open"); $("url").focus(); };
   $("remote").onsubmit = e => {
     e.preventDefault();
@@ -83,7 +93,7 @@
 
   api.state().then(s => {
     if (s.error) status(s.error, true);
-    if (s.mode === "local" && s.musicDir) { $("current").hidden = false; $("current").textContent = "Current folder: " + s.musicDir; }
+    if (s.mode === "local" && s.musicDir) { $("current").hidden = false; $("current").textContent = "Current folder: " + s.musicDir; $("path").value = s.musicDir; }
     if (s.mode === "remote" && s.serverUrl) { $("url").value = s.serverUrl; $("remote").classList.add("open"); }
   });
 </script>
