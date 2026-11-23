@@ -9,7 +9,7 @@
   "scripts": {
     "test": "vitest run",
     "dev": "PORT=3000 DATA_DIR=./data-dev tsx watch --env-file=.env src/index.ts",
-    "build": "tsc && cp src/db/schema.sql dist/db/schema.sql",
+    "build": "tsc && node -e \"require('fs').copyFileSync('src/db/schema.sql','dist/db/schema.sql')\"",
     "start": "node dist/index.js"
   },
   "keywords": [],

@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { spawnFfmpeg } from "./ffmpeg.js";
 import { unlink, rename, mkdir } from "node:fs/promises";
 import { existsSync, statSync } from "node:fs";
 import { join, resolve, extname } from "node:path";
@@ -34,9 +34,7 @@ function runFfmpeg(srcPath: string, bitrate: number, outPath: string, format: Tr
          "-movflags", "+frag_keyframe+empty_moov+default_base_moof", "-frag_duration", "2000000",
          "-f", "mp4", outPath]
       : ["-y", "-i", srcPath, "-map", "0:a:0", "-f", "mp3", "-b:a", `${bitrate}k`, outPath];
-    const ff = nice
-      ? spawn("nice", ["-n", "15", "ffmpeg", ...args], { stdio: ["ignore", "ignore", "pipe"] })
-      : spawn("ffmpeg", args, { stdio: ["ignore", "ignore", "pipe"] });
+    const ff = spawnFfmpeg(args, nice);
     let killed = false;
     let killTimer: ReturnType<typeof setTimeout> | undefined;
     const abort = () => {

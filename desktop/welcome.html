@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+<title>Localhost Music</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: #ececf0;
+    background: radial-gradient(900px 600px at 15% 10%, #3a1626 0%, transparent 60%),
+                radial-gradient(800px 600px at 90% 90%, #23164a 0%, transparent 60%), #0a0a0c;
+    display: grid; place-items: center; padding: 24px; user-select: none;
+  }
+  main { width: 100%; max-width: 460px; }
+  svg { width: 56px; height: 44px; display: block; margin-bottom: 14px; }
+  h1 { margin: 0; font-size: 34px; font-weight: 800; letter-spacing: -0.03em; }
+  h1 b { color: #ff375f; }
+  .lead { color: #a3a3ad; margin: 6px 0 28px; }
+  button { font: inherit; cursor: pointer; border: 0; border-radius: 10px; }
+  .primary { width: 100%; padding: 14px 18px; background: #ff375f; color: #fff; font-weight: 700; font-size: 16px; }
+  .primary:hover { background: #ff5073; }
+  .primary:disabled, .secondary:disabled { opacity: 0.55; cursor: default; }
+  .note { color: #8a8a94; font-size: 13px; margin: 10px 0 0; }
+  .link { background: none; color: #b9b9c3; padding: 0; margin-top: 26px; text-decoration: underline; text-underline-offset: 3px; }
+  .link:hover { color: #fff; }
+  #remote { margin-top: 14px; display: none; gap: 8px; }
+  #remote.open { display: flex; }
+  input { flex: 1; min-width: 0; font: inherit; padding: 11px 13px; border-radius: 10px; border: 1px solid #2f2f38; background: #16161b; color: #fff; }
+  input:focus { outline: 2px solid #ff375f; outline-offset: 1px; }
+  .secondary { padding: 11px 16px; background: #26262e; color: #fff; font-weight: 600; }
+  #status { min-height: 22px; margin-top: 18px; font-size: 14px; color: #a3a3ad; }
+  #status.err { color: #ff7b93; }
+  .current { font-size: 13px; color: #8a8a94; margin: -16px 0 22px; word-break: break-all; }
+</style>
+<main>
+  <svg viewBox="60 100 392 312" fill="none" stroke="#ff375f" stroke-width="40" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M104 176 L204 256 L104 336"/><path d="M318 340 V150 L408 180"/>
+    <ellipse cx="282" cy="344" rx="48" ry="38" transform="rotate(-18 282 344)" fill="#ff375f" stroke="none"/>
+  </svg>
+  <h1>localhost<b>music</b></h1>
+  <p class="lead">Where is your music?</p>
+  <p class="current" id="current" hidden></p>
+
+  <button class="primary" id="pick">Choose your music folder</button>
+  <p class="note">Your files stay where they are. Nothing is uploaded.</p>
+
+  <button class="link" id="toggle">I already run a Localhost Music server</button>
+  <form id="remote">
+    <input id="url" placeholder="https://music.example.com" spellcheck="false" autocomplete="off">
+    <button class="secondary" type="submit">Connect</button>
+  </form>
+
+  <p id="status" role="status"></p>
+</main>
+<script>
+  const $ = id => document.getElementById(id);
+  const api = window.lhmDesktop;
+  const status = (text, err) => { $("status").textContent = text; $("status").className = err ? "err" : ""; };
+  const busy = on => { for (const b of document.querySelectorAll("button")) b.disabled = on; };
+
+  async function run(label, action) {
+    busy(true); status(label);
+    try {
+      const res = await action();
+      if (res && res.error) status(res.error, true);
+      else if (res && res.cancelled) status("");
+    } catch (e) { status(String(e && e.message || e), true); }
+    busy(false);
+  }
+
+  $("pick").onclick = () => run("Starting your library…", async () => {
+    const dir = await api.pickFolder();
+    if (!dir) return { cancelled: true };
+    return api.useFolder(dir);
+  });
+  $("toggle").onclick = () => { $("remote").classList.toggle("open"); $("url").focus(); };
+  $("remote").onsubmit = e => {
+    e.preventDefault();
+    const url = $("url").value.trim();
+    if (url) run("Connecting…", () => api.useServer(url));
+  };
+
+  api.state().then(s => {
+    if (s.error) status(s.error, true);
+    if (s.mode === "local" && s.musicDir) { $("current").hidden = false; $("current").textContent = "Current folder: " + s.musicDir; }
+    if (s.mode === "remote" && s.serverUrl) { $("url").value = s.serverUrl; $("remote").classList.add("open"); }
+  });
+</script>
+</html>

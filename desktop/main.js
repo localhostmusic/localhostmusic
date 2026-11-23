@@ -1,15 +1,31 @@
-// Localhost Music desktop shell.
+// Localhost Music desktop app.
 //
-// The web UI has to be same-origin with its API (relative /api paths, cookie auth,
-// WebSocket on location.host, service worker), so the window loads the user's
-// server URL instead of a bundled copy. Window, tray and menu are layered on top.
+// The window shows the same web UI a browser would. It gets it from one of two places:
+// a server built into this app that plays a folder on this computer, or a server the
+// user already runs somewhere else. The web UI has to be same-origin with its API
+// (cookie auth, WebSocket, service worker), so it is always loaded over http from
+// that server and never from a bundled file.
 
-const { app, BrowserWindow, Tray, nativeImage, shell, Menu } = require("electron");
+const { app, BrowserWindow, Tray, nativeImage, shell, Menu, dialog, ipcMain, session } = require("electron");
+const { spawn } = require("node:child_process");
+const { pathToFileURL } = require("node:url");
+const crypto = require("node:crypto");
 const path = require("node:path");
+const net = require("node:net");
 const fs = require("node:fs");
+const os = require("node:os");
 
 const ICON = path.join(__dirname, "build", "icon.png");
 const TRAY_ICON = path.join(__dirname, "build", "tray.png");
+const WELCOME = path.join(__dirname, "welcome.html");
+const WELCOME_URL = pathToFileURL(WELCOME).href;
+// The built-in server and its own Node binary (see bundle.mjs).
+const SERVER_DIR = path.join(__dirname, "server");
+const SERVER_NODE = path.join(SERVER_DIR, process.platform === "win32" ? "node.exe" : "node");
+const SERVER_ENTRY = path.join(SERVER_DIR, "dist", "index.js");
+// A fixed port keeps the page's origin, and with it saved settings and offline
+// downloads, the same between launches.
+const DEFAULT_PORT = 47821;
 
 const configPath = () => path.join(app.getPath("userData"), "config.json");
 
@@ -25,20 +41,178 @@ function saveConfig(patch) {
   const next = { ...loadConfig(), ...patch };
   try {
     fs.mkdirSync(app.getPath("userData"), { recursive: true });
-    fs.writeFileSync(configPath(), JSON.stringify(next, null, 2));
+    fs.writeFileSync(configPath(), JSON.stringify(next, null, 2), { mode: 0o600 });
   } catch (err) {
     console.error("Failed to save config:", err);
   }
   return next;
 }
 
-// LHM_URL env wins, then the saved URL. Empty on first run (the user is asked).
-function serverUrl() {
-  return process.env.LHM_URL || loadConfig().serverUrl || "";
-}
-
 let mainWindow = null;
 let tray = null;
+let appOrigin = null;   // origin of the server the window is showing, null on the welcome screen
+let local = null;       // { child, base, cookie } while the built-in server runs
+let lastError = "";
+
+// ---------- built-in server ----------
+
+function freePort(preferred) {
+  const tryPort = (port) => new Promise((resolve) => {
+    const probe = net.createServer();
+    probe.once("error", () => resolve(null));
+    probe.listen(port, "127.0.0.1", () => {
+      const got = probe.address().port;
+      probe.close(() => resolve(got));
+    });
+  });
+  return tryPort(preferred).then((port) => port ?? tryPort(0));
+}
+
+function ffmpegPath() {
+  try {
+    return require("ffmpeg-static") || "";
+  } catch {
+    return "";
+  }
+}
+
+function logTail(file) {
+  try {
+    return fs.readFileSync(file, "utf8").trim().split("\n").slice(-6).join("\n");
+  } catch {
+    return "";
+  }
+}
+
+async function startLocal() {
+  if (local) return local.base;
+  let cfg = loadConfig();
+  if (!cfg.password) {
+    // The built-in server still has accounts. The app signs in by itself with this one.
+    let user = "me";
+    try { user = os.userInfo().username.replace(/[^\w.-]/g, "") || "me"; } catch { /* keep default */ }
+    cfg = saveConfig({ user, password: crypto.randomBytes(24).toString("base64url") });
+  }
+  const port = await freePort(cfg.port || DEFAULT_PORT);
+  if (!cfg.port) saveConfig({ port });
+
+  const dataDir = path.join(app.getPath("userData"), "library");
+  fs.mkdirSync(dataDir, { recursive: true });
+  const logFile = path.join(app.getPath("userData"), "server.log");
+  const log = fs.openSync(logFile, "w");
+  const ffmpeg = ffmpegPath();
+
+  const child = spawn(SERVER_NODE, [SERVER_ENTRY], {
+    cwd: SERVER_DIR,
+    env: {
+      ...process.env,
+      PORT: String(port),
+      HOST: "127.0.0.1",
+      DATA_DIR: dataDir,
+      MUSIC_DIR: cfg.musicDir,
+      ADMIN_USER: cfg.user,
+      ADMIN_PASSWORD: cfg.password,
+      COOKIE_SECURE: "0",
+      EXIT_WITH_PID: String(process.pid),
+      ...(ffmpeg ? { FFMPEG_PATH: ffmpeg } : {}),
+    },
+    stdio: ["ignore", log, log],
+    windowsHide: true,
+  });
+  fs.closeSync(log);
+
+  const base = `http://127.0.0.1:${port}`;
+  let exited = false;
+  child.once("exit", () => {
+    exited = true;
+    if (local && local.child === child) {
+      local = null;
+      if (!app.isQuitting) {
+        lastError = "The music library stopped unexpectedly.\n" + logTail(logFile);
+        showWelcome();
+      }
+    }
+  });
+
+  try {
+    let up = false;
+    for (let i = 0; i < 120 && !exited && !up; i++) {
+      up = await fetch(base + "/api/health").then((r) => r.ok, () => false);
+      if (!up) await new Promise((r) => setTimeout(r, 250));
+    }
+    if (!up) throw new Error("The music library did not start.\n" + logTail(logFile));
+
+    const res = await fetch(base + "/api/auth/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ username: cfg.user, password: cfg.password }),
+    });
+    const cookie = (res.headers.getSetCookie()[0] || "").split(";")[0];
+    if (!res.ok || !cookie.includes("=")) throw new Error("Could not sign in to the music library.");
+    const eq = cookie.indexOf("=");
+    await session.defaultSession.cookies.set({
+      url: base,
+      name: cookie.slice(0, eq),
+      value: cookie.slice(eq + 1),
+      httpOnly: true,
+      sameSite: "lax",
+      expirationDate: Date.now() / 1000 + 30 * 24 * 3600,
+    });
+    local = { child, base, cookie };
+    return base;
+  } catch (err) {
+    if (!exited) child.kill();
+    throw err;
+  }
+}
+
+function stopLocal() {
+  if (!local) return;
+  const { child } = local;
+  local = null;
+  child.kill();
+}
+
+// Points the running library at a folder. The server rescans when it changes.
+async function setMusicFolder(dir) {
+  const res = await fetch(local.base + "/api/admin/settings", {
+    method: "PUT",
+    headers: { "content-type": "application/json", cookie: local.cookie },
+    body: JSON.stringify({ musicDir: dir }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || "Could not use that folder.");
+  }
+}
+
+// ---------- window ----------
+
+function show(base) {
+  appOrigin = new URL(base).origin;
+  lastError = "";
+  if (mainWindow) mainWindow.loadURL(base);
+}
+
+function showWelcome() {
+  appOrigin = null;
+  if (mainWindow) mainWindow.loadFile(WELCOME);
+}
+
+async function openSource() {
+  const cfg = loadConfig();
+  // LHM_URL is for development against a running server.
+  if (process.env.LHM_URL) return show(process.env.LHM_URL);
+  if (cfg.mode === "remote" && cfg.serverUrl) return show(cfg.serverUrl);
+  if (cfg.mode === "local" && cfg.musicDir) {
+    try {
+      return show(await startLocal());
+    } catch (err) {
+      lastError = String(err?.message || err);
+    }
+  }
+  showWelcome();
+}
 
 function createWindow() {
   const { bounds } = loadConfig();
@@ -57,11 +231,11 @@ function createWindow() {
       // Keep the default sandbox and don't expose Node to the page.
       contextIsolation: true,
       nodeIntegration: false,
+      preload: path.join(__dirname, "preload.js"),
     },
   });
 
-  if (serverUrl()) mainWindow.loadURL(serverUrl());
-  else promptServerUrl();
+  openSource();
 
   const persistBounds = () => {
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -73,8 +247,9 @@ function createWindow() {
 
   // Off-origin links open in the system browser, not the app window.
   const isAppOrigin = (target) => {
+    if (target.startsWith(WELCOME_URL)) return true;
     try {
-      return new URL(target).origin === new URL(serverUrl()).origin;
+      return appOrigin !== null && new URL(target).origin === appOrigin;
     } catch {
       return false;
     }
@@ -117,6 +292,144 @@ function showWindow() {
   }
 }
 
+function changeSource() {
+  showWindow();
+  showWelcome();
+}
+
+// ---------- requests from the page ----------
+
+const fromWelcome = (event) => (event.senderFrame?.url || "").startsWith(WELCOME_URL);
+const fromApp = (event) => {
+  try {
+    return fromWelcome(event) || (appOrigin !== null && new URL(event.senderFrame.url).origin === appOrigin);
+  } catch {
+    return false;
+  }
+};
+
+function registerIpc() {
+  ipcMain.handle("desktop:pick-folder", async (event) => {
+    if (!fromApp(event)) return null;
+    const res = await dialog.showOpenDialog(mainWindow, {
+      title: "Choose your music folder",
+      properties: ["openDirectory"],
+    });
+    return res.canceled ? null : res.filePaths[0];
+  });
+
+  ipcMain.handle("setup:state", (event) => {
+    if (!fromWelcome(event)) return {};
+    const { mode, musicDir, serverUrl } = loadConfig();
+    return { mode, musicDir, serverUrl, error: lastError };
+  });
+
+  ipcMain.handle("setup:local", async (event, dir) => {
+    if (!fromWelcome(event)) return { error: "Not allowed." };
+    if (typeof dir !== "string" || !fs.existsSync(dir)) return { error: "That folder does not exist." };
+    saveConfig({ mode: "local", musicDir: dir });
+    try {
+      const base = await startLocal();
+      await setMusicFolder(dir);
+      show(base);
+      return { ok: true };
+    } catch (err) {
+      return { error: String(err?.message || err) };
+    }
+  });
+
+  ipcMain.handle("setup:remote", async (event, value) => {
+    if (!fromWelcome(event)) return { error: "Not allowed." };
+    let url = String(value || "").trim().replace(/\/+$/, "");
+    if (!url) return { error: "Enter your server's address." };
+    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+    const ok = await fetch(url + "/api/health", { signal: AbortSignal.timeout(8000) })
+      .then((r) => r.ok, () => false);
+    if (!ok) return { error: `No Localhost Music server answered at ${url}.` };
+    saveConfig({ mode: "remote", serverUrl: url });
+    stopLocal();
+    show(url);
+    return { ok: true };
+  });
+}
+
+// ---------- updates ----------
+
+let updater = null;
+let manualCheck = false;
+
+const plainNotes = (notes) => {
+  const text = Array.isArray(notes) ? notes.map((n) => n.note).join("\n\n") : String(notes || "");
+  return text.replace(/<li>/g, "- ").replace(/<\/(p|li|h\d)>/g, "\n").replace(/<[^>]+>/g, "")
+    .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\n{3,}/g, "\n\n").trim();
+};
+
+function setupUpdates() {
+  // Only the installed Windows app and the Linux AppImage can replace themselves.
+  if (!app.isPackaged) return;
+  try {
+    updater = require("electron-updater").autoUpdater;
+  } catch {
+    return;
+  }
+  updater.autoDownload = false;
+
+  updater.on("update-available", async (info) => {
+    manualCheck = false;
+    const { response } = await dialog.showMessageBox(mainWindow, {
+      type: "info",
+      buttons: ["Update", "Later"],
+      defaultId: 0,
+      cancelId: 1,
+      message: `Localhost Music ${info.version} is available`,
+      detail: plainNotes(info.releaseNotes) || "A new version is ready to download.",
+    });
+    if (response === 0) updater.downloadUpdate().catch(() => {});
+  });
+  updater.on("update-not-available", () => {
+    if (manualCheck) dialog.showMessageBox(mainWindow, { type: "info", message: "You're up to date.", detail: `Version ${app.getVersion()}` });
+    manualCheck = false;
+  });
+  updater.on("update-downloaded", async () => {
+    const { response } = await dialog.showMessageBox(mainWindow, {
+      type: "info",
+      buttons: ["Restart now", "Later"],
+      defaultId: 0,
+      cancelId: 1,
+      message: "The update is ready",
+      detail: "Restart Localhost Music to finish installing it.",
+    });
+    if (response === 0) {
+      app.isQuitting = true;
+      updater.quitAndInstall();
+    }
+  });
+  updater.on("error", (err) => {
+    if (manualCheck) dialog.showMessageBox(mainWindow, { type: "warning", message: "Could not check for updates", detail: String(err?.message || err) });
+    manualCheck = false;
+  });
+
+  const check = () => updater.checkForUpdates().catch(() => {});
+  setTimeout(check, 8000);
+  setInterval(check, 6 * 60 * 60 * 1000);
+}
+
+function checkForUpdates() {
+  if (!updater) {
+    dialog.showMessageBox(mainWindow, { type: "info", message: "Updates are only available in the installed app." });
+    return;
+  }
+  manualCheck = true;
+  updater.checkForUpdates().catch(() => {});
+}
+
+// ---------- tray and menu ----------
+
+const quit = () => {
+  app.isQuitting = true;
+  app.quit();
+};
+
 function createTray() {
   try {
     const img = nativeImage.createFromPath(TRAY_ICON);
@@ -131,81 +444,14 @@ function createTray() {
     Menu.buildFromTemplate([
       { label: "Show Localhost Music", click: showWindow },
       { type: "separator" },
-      { label: "Change Server…", click: promptServerUrl },
+      { label: "Change Music Source…", click: changeSource },
+      { label: "Check for Updates…", click: checkForUpdates },
       { type: "separator" },
-      {
-        label: "Quit Localhost Music",
-        click: () => {
-          app.isQuitting = true;
-          app.quit();
-        },
-      },
+      { label: "Quit Localhost Music", click: quit },
     ]),
   );
   // Left-click the tray icon toggles the window (common on Windows/Linux).
   tray.on("click", showWindow);
-}
-
-function promptServerUrl() {
-  const current = serverUrl();
-  const prompt = new BrowserWindow({
-    width: 460,
-    height: 190,
-    parent: mainWindow ?? undefined,
-    modal: true,
-    resizable: false,
-    minimizable: false,
-    maximizable: false,
-    title: "Localhost Music Server",
-    backgroundColor: "#111114",
-    webPreferences: { contextIsolation: true, nodeIntegration: false, preload: path.join(__dirname, "prompt-preload.js") },
-  });
-  prompt.setMenu(null);
-  const html = `data:text/html,${encodeURIComponent(`
-    <!doctype html><meta charset="utf-8">
-    <style>
-      body{font:14px system-ui,sans-serif;background:#111114;color:#eee;margin:0;padding:18px;}
-      label{display:block;margin-bottom:8px;color:#aaa;}
-      input{width:100%;box-sizing:border-box;padding:9px 11px;border-radius:8px;border:1px solid #333;background:#1c1c20;color:#fff;font-size:14px;}
-      .row{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;}
-      button{padding:8px 16px;border-radius:8px;border:0;font-size:13px;cursor:pointer;}
-      .ok{background:#e0245e;color:#fff;} .cancel{background:#2a2a30;color:#ddd;}
-    </style>
-    <label>Localhost Music server URL</label>
-    <input id="u" value="${current.replace(/"/g, "&quot;")}" autofocus>
-    <div class="row">
-      <button class="cancel" onclick="window.lhm.cancel()">Cancel</button>
-      <button class="ok" onclick="save()">Connect</button>
-    </div>
-    <script>
-      const i=document.getElementById('u');
-      function save(){ const v=i.value.trim(); if(v) window.lhm.submit(v); }
-      i.addEventListener('keydown',e=>{ if(e.key==='Enter')save(); if(e.key==='Escape')window.lhm.cancel(); });
-      i.focus(); i.select();
-    </script>
-  `)}`;
-  prompt.loadURL(html);
-
-  const { ipcMain } = require("electron");
-  const onSubmit = (_e, value) => {
-    let url = value.trim();
-    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
-    saveConfig({ serverUrl: url });
-    cleanup();
-    if (mainWindow) mainWindow.loadURL(url);
-  };
-  const onCancel = () => cleanup();
-  const cleanup = () => {
-    ipcMain.removeListener("prompt:submit", onSubmit);
-    ipcMain.removeListener("prompt:cancel", onCancel);
-    if (!prompt.isDestroyed()) prompt.close();
-  };
-  ipcMain.on("prompt:submit", onSubmit);
-  ipcMain.on("prompt:cancel", onCancel);
-  prompt.on("closed", () => {
-    ipcMain.removeListener("prompt:submit", onSubmit);
-    ipcMain.removeListener("prompt:cancel", onCancel);
-  });
 }
 
 function buildMenu() {
@@ -213,9 +459,10 @@ function buildMenu() {
     {
       label: "Localhost Music",
       submenu: [
-        { label: "Change Server…", click: promptServerUrl },
+        { label: "Change Music Source…", click: changeSource },
+        { label: "Check for Updates…", click: checkForUpdates },
         { type: "separator" },
-        { role: "quit" },
+        { label: "Quit", accelerator: "CmdOrCtrl+Q", click: quit },
       ],
     },
     {
@@ -247,27 +494,30 @@ function buildMenu() {
 if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
-  app.on("second-instance", () => {
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.focus();
-    }
-  });
+  app.on("second-instance", showWindow);
 
   app.whenReady().then(() => {
+    registerIpc();
     buildMenu();
     createTray();
     createWindow();
+    setupUpdates();
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
       else showWindow();
     });
   });
 
+  // Session logout and shutdown send SIGTERM. Without this the close-to-tray handler
+  // would keep the app alive.
+  process.on("SIGTERM", quit);
+  process.on("SIGINT", quit);
+
   // Every quit path sets the flag so the close-to-tray handler lets the window close.
   app.on("before-quit", () => {
     app.isQuitting = true;
   });
+  app.on("will-quit", stopLocal);
 
   // No window-all-closed handler: the tray keeps the app alive.
 }

@@ -83,6 +83,9 @@ const TIER_HINTS: Record<number, string> = {
 
 // Paths + pre-transcoded tiers. Each tier toggle keeps a ready-to-serve MP3 of
 // the whole library at that bitrate, so first plays never wait on ffmpeg.
+// Present only inside the desktop app, where a native folder picker exists.
+const pickFolder = (window as any).lhmDesktop?.pickFolder as (() => Promise<string | null>) | undefined;
+
 function StorageSettings() {
   const [s, setS] = useState<any>(null);
   const [musicDir, setMusicDir] = useState("");
@@ -207,12 +210,14 @@ function StorageSettings() {
       <label className="field-label">Music library path</label>
       <div className="field-row">
         <input value={musicDir} onChange={e => setMusicDir(e.target.value)} placeholder={s.defaults?.musicDir} spellCheck={false} />
+        {pickFolder && <button className="btn" onClick={async () => { const dir = await pickFolder(); if (dir) setMusicDir(dir); }}>Browse…</button>}
         <button className="btn" onClick={() => openFolder("music")} disabled={!s.musicDir} title="Open in the file manager on the machine running Localhost Music">Open</button>
         <button className="btn" onClick={() => copyPath(musicDir || s.musicDir, "music")}>{copied === "music" ? "Copied" : "Copy"}</button>
       </div>
       <label className="field-label">Audiobooks path (optional)</label>
       <div className="field-row">
         <input value={audiobookDir} onChange={e => setAudiobookDir(e.target.value)} placeholder="e.g. /media/audiobooks" spellCheck={false} />
+        {pickFolder && <button className="btn" onClick={async () => { const dir = await pickFolder(); if (dir) setAudiobookDir(dir); }}>Browse…</button>}
         <button className="btn" onClick={() => openFolder("audiobooks")} disabled={!audiobookDir.trim()} title="Open in the file manager on the machine running Localhost Music">Open</button>
         <button className="btn" onClick={() => copyPath(audiobookDir, "audiobooks")} disabled={!audiobookDir.trim()}>{copied === "audiobooks" ? "Copied" : "Copy"}</button>
       </div>

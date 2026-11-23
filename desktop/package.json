@@ -3,7 +3,8 @@
   "name": "localhostmusic-desktop",
   "productName": "Localhost Music",
   "version": "0.1.0",
-  "description": "Localhost Music desktop shell: the web UI in a standalone Electron window",
+  "description": "Localhost Music desktop app: the player and a built-in server in one window",
+  "homepage": "https://github.com/localhostmusic/localhostmusic",
   "private": true,
   "author": {
     "name": "Jesus Venegas",
@@ -11,15 +12,16 @@
   },
   "main": "main.js",
   "scripts": {
+    "bundle": "node bundle.mjs",
     "start": "electron .",
     "dev": "LHM_URL=http://localhost:3000 electron .",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder --linux AppImage deb",
-    "dist:win": "electron-builder --win portable"
+    "pack": "npm run bundle && electron-builder --dir",
+    "dist": "npm run bundle && electron-builder --linux AppImage deb",
+    "dist:win": "npm run bundle && electron-builder --win nsis portable"
   },
   "devDependencies": {
-    "electron": "^33.2.0",
-    "electron-builder": "^25.1.8"
+    "electron": "^42.11.18",
+    "electron-builder": "^26.0.0"
   },
   "build": {
     "appId": "io.github.localhostmusic",
@@ -30,9 +32,12 @@
     },
     "files": [
       "main.js",
-      "prompt-preload.js",
+      "preload.js",
+      "welcome.html",
       "build/icon.png",
-      "build/tray.png"
+      "build/tray.png",
+      "server/**/*",
+      "server/node_modules/**/*"
     ],
     "linux": {
       "target": [
@@ -41,18 +46,41 @@
       ],
       "icon": "build/icon.png",
       "category": "AudioVideo",
-      "synopsis": "Self-hosted music, in a standalone window",
-      "description": "The Localhost Music web player in its own app window, with a tray icon and media keys."
+      "synopsis": "Your music library, in its own app",
+      "description": "Plays the music on this computer, or connects to a Localhost Music server. Tray icon and media keys included."
     },
     "win": {
       "target": [
+        "nsis",
         "portable"
       ],
       "icon": "build/icon.png",
       "signAndEditExecutable": false
     },
     "portable": {
-      "artifactName": "LocalhostMusic-${version}-portable.exe"
-    }
+      "artifactName": "LocalhostMusic-${version}-portable.${ext}"
+    },
+    "artifactName": "LocalhostMusic-${version}-${arch}.${ext}",
+    "nsis": {
+      "artifactName": "LocalhostMusic-Setup-${version}.${ext}",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "asar": false,
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "localhostmusic",
+        "repo": "localhostmusic"
+      }
+    ],
+    "npmRebuild": false
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2",
+    "ffmpeg-static": "^5.2.0"
+  },
+  "allowScripts": {
+    "ffmpeg-static@5.3.0": true
   }
 }

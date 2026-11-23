@@ -198,8 +198,10 @@ export async function adminRoutes(app: FastifyInstance) {
     const env: Record<string, string> = { ...process.env as any };
     if (!env.DISPLAY) env.DISPLAY = ":0";
     if (!env.DBUS_SESSION_BUS_ADDRESS) env.DBUS_SESSION_BUS_ADDRESS = `unix:path=/run/user/${process.getuid?.() ?? 1000}/bus`;
+    const opener = process.platform === "win32" ? "explorer" : process.platform === "darwin" ? "open" : "xdg-open";
     try {
-      await openFolderExec("xdg-open", [dir], { env, timeout: 5000 });
+      // explorer exits non-zero even when the window opens.
+      await openFolderExec(opener, [dir], { env, timeout: 5000 }).catch(e => { if (opener !== "explorer") throw e; });
       return { ok: true };
     } catch (e: any) {
       return reply.code(500).send({ error: "couldn't open a file manager on the host (needs a desktop session there): " + (e?.message ?? e) });

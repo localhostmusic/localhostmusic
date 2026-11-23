@@ -38,8 +38,17 @@ scanAll(app.db, config.dataDir)
     setTimeout(() => backfillArtColors(app.db, config.dataDir).catch(() => {}), 10_000);
   })
   .catch(e => console.error("Scan failed", e));
-app.listen({ port: config.port, host: "0.0.0.0" })
+app.listen({ port: config.port, host: config.host })
   .then(() => console.log(`Localhost Music on ${config.port}`));
+
+// The desktop app passes its pid. When that process is gone, however it died, stop
+// too so no orphan keeps the port.
+const parentPid = Number(process.env.EXIT_WITH_PID);
+if (parentPid > 0) {
+  setInterval(() => {
+    try { process.kill(parentPid, 0); } catch { process.exit(0); }
+  }, 2000).unref();
+}
 
 // Podcast auto-refresh: pull new episodes for every subscribed feed shortly after
 // boot, then every 3h. Per-feed failures are swallowed inside.

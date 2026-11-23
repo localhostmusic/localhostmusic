@@ -44,6 +44,17 @@ Accounts
 - Multiple users, created by the admin. No public signup.
 - Users can request missing music and report bad metadata.
 
+## Desktop app
+
+The quickest way to try it. Download the installer for Windows or Linux from the
+[releases page](https://github.com/localhostmusic/localhostmusic/releases), open it,
+and choose your music folder. The app runs its own server in the background, only
+reachable from your computer, and updates itself when a new release is out.
+
+If you already run a server, the same app can connect to it instead.
+
+To stream to your phone, TV or other computers, run the server (Docker, below).
+
 ## Apps
 
 The web app is the main client. The others are thin shells around it.
@@ -51,11 +62,11 @@ The web app is the main client. The others are thin shells around it.
 | Target | Where | Notes |
 | ------ | ----- | ----- |
 | Web / PWA | any browser | Installable, works offline. |
-| Desktop | [`desktop/`](desktop) | Electron. Tray icon, media keys. |
+| Desktop | [`desktop/`](desktop) | Electron. Built-in server or a remote one. Tray icon, media keys. |
 | Android | [`web/android/`](web/android) | Capacitor, with native audio (Media3) and lock-screen controls. |
 | Android TV | [`tv-app/`](tv-app) | WebView around `/tv` with d-pad navigation. |
 
-The shells ask for your server's address on first run.
+The Android and TV apps ask for your server's address on first run.
 
 ## Quick start (Docker)
 

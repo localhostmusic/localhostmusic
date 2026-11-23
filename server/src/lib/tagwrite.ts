@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { spawnFfmpeg } from "./ffmpeg.js";
 import { rename } from "node:fs/promises";
 import { dirname, join, extname } from "node:path";
 
@@ -31,7 +31,7 @@ export function writeTags(path: string, tags: WritableTags): Promise<void> {
     add("disc", tags.disc);
     args.push("-y", "-loglevel", "error", tmp);
 
-    const ff = spawn("ffmpeg", args, { stdio: ["ignore", "ignore", "pipe"] });
+    const ff = spawnFfmpeg(args);
     let errOut = "";
     ff.stderr.on("data", d => { errOut += d.toString(); });
     ff.on("error", reject);

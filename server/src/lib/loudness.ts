@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { spawnFfmpeg } from "./ffmpeg.js";
 import type Database from "better-sqlite3";
 
 // Volume normalization: measure each track's integrated loudness (EBU R128, LUFS)
@@ -14,7 +14,7 @@ export function analyzeLoudness(path: string): Promise<number | null> {
     let err = "";
     let ff;
     try {
-      ff = spawn("nice", ["-n", "15", "ffmpeg", ...args], { stdio: ["ignore", "ignore", "pipe"] });
+      ff = spawnFfmpeg(args, true);
     } catch {
       resolve(null);
       return;

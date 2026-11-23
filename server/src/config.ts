@@ -50,6 +50,9 @@ function resolveJwtSecret(): string {
 
 export const config = {
   port: Number(process.env.PORT ?? 8585),
+  // Address to listen on. The desktop app sets 127.0.0.1 so nothing else on the
+  // network can reach its built-in server.
+  host: process.env.HOST ?? "0.0.0.0",
   musicDir: process.env.MUSIC_DIR ?? "/music",
   dataDir,
   jwtSecret: resolveJwtSecret(),
