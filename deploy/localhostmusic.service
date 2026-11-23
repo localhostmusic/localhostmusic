@@ -1,0 +1,20 @@
+# Example systemd unit for running Localhost Music from a source checkout.
+# Copy to /etc/systemd/system/localhostmusic.service, adjust User and paths, then:
+#   sudo systemctl daemon-reload && sudo systemctl enable --now localhostmusic
+[Unit]
+Description=Localhost Music server
+After=network.target
+
+[Service]
+Type=simple
+User=localhostmusic
+WorkingDirectory=/opt/localhostmusic/server
+EnvironmentFile=/opt/localhostmusic/server/.env
+Environment=PORT=8585
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node dist/index.js
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

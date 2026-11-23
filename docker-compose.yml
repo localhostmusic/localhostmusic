@@ -1,0 +1,31 @@
+services:
+  localhostmusic:
+    build: .
+    ports: ["8585:8585"]
+    environment:
+      # No JWT_SECRET here: Localhost Music generates one on first run and stores it in the data
+      # volume (/data/.jwt-secret). Set your own only if you need to (e.g. to share
+      # sessions across replicas):  JWT_SECRET=$(openssl rand -hex 32)
+
+      # The admin account is created on first run. With no ADMIN_PASSWORD set, Localhost Music
+      # generates a random one and prints it to the log once:
+      #     docker compose logs localhostmusic
+      # Or set one here. Don't leave a default password on a server you expose.
+      ADMIN_USER: "admin"
+      # ADMIN_PASSWORD: "pick-something-strong"
+
+      # Set to 1 when Localhost Music runs behind a reverse proxy (Caddy/nginx/Traefik/Cloudflare)
+      # so it sees the real client IP and https scheme, instead of the proxy's. Leave
+      # unset if the container is reachable directly.
+      # TRUST_PROXY: "1"
+
+      # Optional: free key from https://fanart.tv/get-an-api-key/ for wide
+      # landscape artist banners. Without it, Localhost Music falls back to Deezer photos.
+      FANART_API_KEY: ""
+    volumes:
+      # Read-write so Localhost Music can write tag fixes back to files and delete tracks.
+      # Change to ":ro" if you'd rather keep your music folder read-only.
+      - ./music:/music
+      - lhm-data:/data
+volumes:
+  lhm-data:

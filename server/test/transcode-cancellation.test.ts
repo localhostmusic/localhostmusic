@@ -1,0 +1,27 @@
+import { EventEmitter } from 'node:events';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { afterEach, expect, it, vi } from 'vitest';
+import { transcodedFile } from '../src/lib/transcode.js';
+const processMock = vi.hoisted(() => ({spawn: vi.fn()}));
+vi.mock('node:child_process', () => ({spawn: processMock.spawn}));
+const dirs: string[] = [];
+afterEach(() => {vi.useRealTimers();dirs.splice(0).forEach(d=>rmSync(d,{recursive:true,force:true}));});
+it('lets a replacement media request rejoin an encode after its old request aborts', async () => {
+  const dir = mkdtempSync(join(tmpdir(),'lhm-rejoin-')); dirs.push(dir);
+  const child = Object.assign(new EventEmitter(),{stderr:new EventEmitter(),kill:vi.fn()});
+  let output = '';
+  processMock.spawn.mockImplementation((_cmd,args) => {output = args.at(-1);return child;});
+  const controller = new AbortController();
+  const old = transcodedFile('same','/unused.flac',128,dir,'m4a',{signal:controller.signal}).catch(e=>e);
+  await vi.waitFor(() => expect(processMock.spawn).toHaveBeenCalledOnce());
+  vi.useFakeTimers();
+  controller.abort(); await old;
+  const replacement = transcodedFile('same','/unused.flac',128,dir,'m4a');
+  await vi.advanceTimersByTimeAsync(2000);
+  expect(child.kill).not.toHaveBeenCalled();
+  expect(processMock.spawn).toHaveBeenCalledOnce();
+  writeFileSync(output,'encoded'); child.emit('close',0);
+  await expect(replacement).resolves.toBe(join(dir,'same.m4a'));
+});

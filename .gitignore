@@ -1,0 +1,17 @@
+node_modules/
+data/
+*.log
+.DS_Store
+dist/
+*.tsbuildinfo
+
+# Go scanner sidecar binary (built per-platform via `go build`; source is tracked)
+/server/scanner-go/lhm-scan
+# Built SPA copied into the server (artifact). Scoped to the server: web/public/
+# holds source PWA assets.
+/server/public/
+
+# Local dev secrets / config
+.env
+server/.env
+server/data/

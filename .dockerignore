@@ -1,0 +1,25 @@
+# Never copy host node_modules or secrets into the image. The Dockerfile runs
+# `npm ci` inside the image so native modules (better-sqlite3, argon2) match its
+# Node ABI. Host-built ones cause ERR_DLOPEN_FAILED at boot.
+**/node_modules
+
+# Secrets and local config, must not be baked into image layers.
+**/.env
+**/.env.*
+!**/.env.example
+
+# Build outputs (regenerated inside the image).
+**/dist
+web/dist
+server/dist
+
+# Local runtime data (SQLite DB, cover cache) and logs.
+**/data
+*.log
+
+# VCS / tooling / editor cruft.
+.git
+.gitignore
+**/.DS_Store
+**/*.md
+docs

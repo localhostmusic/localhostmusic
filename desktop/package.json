@@ -1,0 +1,58 @@
+{
+  "license": "AGPL-3.0-only",
+  "name": "localhostmusic-desktop",
+  "productName": "Localhost Music",
+  "version": "0.1.0",
+  "description": "Localhost Music desktop shell: the web UI in a standalone Electron window",
+  "private": true,
+  "author": {
+    "name": "Jesus Venegas",
+    "email": "JesusEgonVenegas@users.noreply.github.com"
+  },
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "LHM_URL=http://localhost:3000 electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --linux AppImage deb",
+    "dist:win": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "io.github.localhostmusic",
+    "productName": "Localhost Music",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "prompt-preload.js",
+      "build/icon.png",
+      "build/tray.png"
+    ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "build/icon.png",
+      "category": "AudioVideo",
+      "synopsis": "Self-hosted music, in a standalone window",
+      "description": "The Localhost Music web player in its own app window, with a tray icon and media keys."
+    },
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "icon": "build/icon.png",
+      "signAndEditExecutable": false
+    },
+    "portable": {
+      "artifactName": "LocalhostMusic-${version}-portable.exe"
+    }
+  }
+}
