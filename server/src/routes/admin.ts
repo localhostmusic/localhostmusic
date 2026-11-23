@@ -283,7 +283,14 @@ export async function adminRoutes(app: FastifyInstance) {
     const after = getSettings(app.db);
 
     let rescan = null;
-    if (after.musicDir !== before.musicDir || after.audiobookDir !== before.audiobookDir) {
+    const rootsChanged = after.musicDir !== before.musicDir || after.audiobookDir !== before.audiobookDir;
+    // `background` answers straight away and lets the scan run on. A big library
+    // takes minutes, too long to hold a request open.
+    const scanning = rootsChanged && b.background === true;
+    if (scanning) {
+      void scanAll(app.db, config.dataDir).then(() => { pruneEmpty(app.db); return runPrewarm(app.db); })
+        .catch(e => console.error("Scan failed", e));
+    } else if (rootsChanged) {
       rescan = await scanAll(app.db, config.dataDir);
       pruneEmpty(app.db);
     }
@@ -293,7 +300,7 @@ export async function adminRoutes(app: FastifyInstance) {
         rescan) {
       void runPrewarm(app.db);
     }
-    return { ok: true, settings: after, rescan };
+    return { ok: true, settings: after, rescan, scanning };
   });
 
   // Delete one tier's cached transcodes (also matches legacy id-keyed files).

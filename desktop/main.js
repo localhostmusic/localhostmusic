@@ -23,6 +23,7 @@ const WELCOME_URL = pathToFileURL(WELCOME).href;
 const SERVER_DIR = path.join(__dirname, "server");
 const SERVER_NODE = path.join(SERVER_DIR, process.platform === "win32" ? "node.exe" : "node");
 const SERVER_ENTRY = path.join(SERVER_DIR, "dist", "index.js");
+const SCANNER = path.join(SERVER_DIR, process.platform === "win32" ? "lhm-scan.exe" : "lhm-scan");
 // A fixed port keeps the page's origin, and with it saved settings and offline
 // downloads, the same between launches.
 const DEFAULT_PORT = 47821;
@@ -115,6 +116,7 @@ async function startLocal() {
       COOKIE_SECURE: "0",
       EXIT_WITH_PID: String(process.pid),
       ...(ffmpeg ? { FFMPEG_PATH: ffmpeg } : {}),
+      ...(fs.existsSync(SCANNER) ? { LHM_SCANNER_BIN: SCANNER } : {}),
     },
     stdio: ["ignore", log, log],
     windowsHide: true,
@@ -178,7 +180,7 @@ async function setMusicFolder(dir) {
   const res = await fetch(local.base + "/api/admin/settings", {
     method: "PUT",
     headers: { "content-type": "application/json", cookie: local.cookie },
-    body: JSON.stringify({ musicDir: dir }),
+    body: JSON.stringify({ musicDir: dir, background: true }),
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));

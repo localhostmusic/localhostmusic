@@ -124,13 +124,13 @@ function StorageSettings() {
     return () => clearInterval(t);
   }, [running]);
 
-  async function savePaths() {
+  async function savePaths(over: { musicDir?: string; audiobookDir?: string; background?: boolean } = {}) {
     setBusy(true); setPathMsg(""); setPathErr("");
     try {
-      const r = await api.saveAdminSettings({ musicDir: musicDir.trim(), audiobookDir: audiobookDir.trim(), transcodeDir: transcodeDir.trim() });
+      const r = await api.saveAdminSettings({ musicDir: musicDir.trim(), audiobookDir: audiobookDir.trim(), transcodeDir: transcodeDir.trim(), ...over });
       // Reflect the server's saved values back into the fields so "unsaved" clears.
       if (r.settings) { setMusicDir(r.settings.musicDir ?? ""); setAudiobookDir(r.settings.audiobookDir ?? ""); setTranscodeDir(r.settings.transcodeDir ?? ""); }
-      setPathMsg(r.rescan ? `Saved ✓ Rescanned: +${r.rescan.added} tracks, +${r.rescan.books ?? 0} audiobooks.` : "Saved ✓");
+      setPathMsg(r.scanning ? "Saved ✓ Scanning the new folder. Music appears as it is found." : r.rescan ? `Saved ✓ Rescanned: +${r.rescan.added} tracks, +${r.rescan.books ?? 0} audiobooks.` : "Saved ✓");
       load();
     } catch (e: any) { setPathErr(e?.message ?? "Could not save. Check the path exists on the server."); }
     finally { setBusy(false); }
@@ -210,14 +210,14 @@ function StorageSettings() {
       <label className="field-label">Music library path</label>
       <div className="field-row">
         <input value={musicDir} onChange={e => setMusicDir(e.target.value)} placeholder={s.defaults?.musicDir} spellCheck={false} />
-        {pickFolder && <button className="btn" onClick={async () => { const dir = await pickFolder(); if (dir) setMusicDir(dir); }}>Browse…</button>}
+        {pickFolder && <button className="btn" disabled={busy} onClick={async () => { const dir = await pickFolder(); if (dir) { setMusicDir(dir); savePaths({ musicDir: dir, background: true }); } }}>Browse…</button>}
         <button className="btn" onClick={() => openFolder("music")} disabled={!s.musicDir} title="Open in the file manager on the machine running Localhost Music">Open</button>
         <button className="btn" onClick={() => copyPath(musicDir || s.musicDir, "music")}>{copied === "music" ? "Copied" : "Copy"}</button>
       </div>
       <label className="field-label">Audiobooks path (optional)</label>
       <div className="field-row">
         <input value={audiobookDir} onChange={e => setAudiobookDir(e.target.value)} placeholder="e.g. /media/audiobooks" spellCheck={false} />
-        {pickFolder && <button className="btn" onClick={async () => { const dir = await pickFolder(); if (dir) setAudiobookDir(dir); }}>Browse…</button>}
+        {pickFolder && <button className="btn" disabled={busy} onClick={async () => { const dir = await pickFolder(); if (dir) { setAudiobookDir(dir); savePaths({ audiobookDir: dir, background: true }); } }}>Browse…</button>}
         <button className="btn" onClick={() => openFolder("audiobooks")} disabled={!audiobookDir.trim()} title="Open in the file manager on the machine running Localhost Music">Open</button>
         <button className="btn" onClick={() => copyPath(audiobookDir, "audiobooks")} disabled={!audiobookDir.trim()}>{copied === "audiobooks" ? "Copied" : "Copy"}</button>
       </div>
@@ -225,7 +225,7 @@ function StorageSettings() {
       <label className="field-label">Transcode cache path</label>
       <div className="field-row">
         <input value={transcodeDir} onChange={e => setTranscodeDir(e.target.value)} placeholder={s.defaults?.transcodeDir} spellCheck={false} />
-        <button className="btn primary" onClick={savePaths} disabled={busy || !pathsDirty}>
+        <button className="btn primary" onClick={() => savePaths()} disabled={busy || !pathsDirty}>
           {busy ? "Saving…" : pathsDirty ? "Save paths" : "Saved ✓"}
         </button>
       </div>

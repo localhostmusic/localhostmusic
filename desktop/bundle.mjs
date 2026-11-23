@@ -24,6 +24,15 @@ cpSync(join(root, "web", "dist"), join(out, "public"), { recursive: true });
 for (const f of ["package.json", "package-lock.json"]) cpSync(join(root, "server", f), join(out, f));
 run("npm ci --omit=dev --no-audit --no-fund", out);
 
+// The Go scanner is much faster on big libraries and keeps the scan out of the
+// server process. Optional: without Go the server uses its own scanner.
+try {
+  const scanner = join(out, process.platform === "win32" ? "lhm-scan.exe" : "lhm-scan");
+  run(`go build -o "${scanner}" .`, join(root, "server", "scanner-go"));
+} catch {
+  console.warn("Go not available, shipping without the fast scanner.");
+}
+
 const node = join(out, basename(process.execPath));
 cpSync(process.execPath, node);
 chmodSync(node, 0o755);
