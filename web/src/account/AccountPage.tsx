@@ -8,6 +8,7 @@ import { MyAvatar, bumpAvatar } from "../ui/MyAvatar";
 import { ScrobbleSettings } from "./ScrobbleSettings";
 import { SubsonicSettings } from "./SubsonicSettings";
 import { api } from "../api";
+import { AppUpdateSettings, inDesktopApp } from "../ui/desktopUpdate";
 
 type Storage = {
   totalSize: number; tracks: number; albums: number; artists: number;
@@ -218,6 +219,13 @@ export function AccountPage({ username, isAdmin, onNavigate, onLogout }: {
           </>
         ) : <p className="account-section-sub">Loading…</p>}
       </div>
+
+      {inDesktopApp && (
+        <div className="account-section">
+          <h2 className="account-section-title">Desktop app</h2>
+          <AppUpdateSettings />
+        </div>
+      )}
 
       <div className="account-section">
         <h2 className="account-section-title">Diagnostics</h2>

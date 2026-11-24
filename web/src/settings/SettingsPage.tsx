@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
+import { AppUpdateSettings, inDesktopApp } from "../ui/desktopUpdate";
 import { KIND_LABELS } from "../reports/RequestsPage";
 
 function parseAlbumDetail(detail?: string): { year?: number | null; rgid?: string | null } {
@@ -569,6 +570,13 @@ export function SettingsPage() {
       <header className="page-head">
         <h1>Settings</h1>
       </header>
+
+      {inDesktopApp && (
+        <section className="card">
+          <h2>Desktop app</h2>
+          <AppUpdateSettings />
+        </section>
+      )}
 
       <section className="card">
         <h2>Library</h2>

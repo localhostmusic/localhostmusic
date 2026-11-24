@@ -432,6 +432,7 @@ button { touch-action: manipulation; }
 .update-notes-toggle { align-self: flex-start; background: none; border: 0; padding: 0; color: var(--accent); font: inherit; font-size: 13px; cursor: pointer; }
 .update-notes { white-space: pre-wrap; font-size: 12.5px; line-height: 1.45; color: var(--muted); max-height: 180px; overflow-y: auto; }
 .update-actions { display: flex; gap: 8px; margin-top: 6px; }
+.app-update-line { margin: 0 0 6px; font-size: 14px; }
 .update-progress { position: relative; height: 28px; margin-top: 6px; border-radius: 999px; background: var(--bg-elev2); overflow: hidden; }
 .update-progress > div { position: absolute; inset: 0 auto 0 0; background: var(--accent); opacity: 0.55; transition: width 0.3s; }
 .update-progress > span { position: relative; display: block; text-align: center; line-height: 28px; font-size: 12.5px; font-weight: 600; }

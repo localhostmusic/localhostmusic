@@ -109,6 +109,38 @@ export function AppVersion() {
   );
 }
 
+// "Desktop app" block for the settings pages: version, a check button, and the
+// update itself when there is one. Renders nothing in a browser.
+export function AppUpdateSettings() {
+  const s = useDesktopUpdate();
+  const [checking, setChecking] = useState(false);
+  useEffect(() => { setChecking(false); }, [s]);
+  if (!bridge || !s.current) return null;
+
+  const check = () => {
+    setChecking(true);
+    bridge.check();
+    // No answer (offline, GitHub unreachable): give the button back.
+    setTimeout(() => setChecking(false), 15000);
+  };
+  return (
+    <>
+      <p className="app-update-line">
+        You have version {s.current}.{" "}
+        {updatePending() ? title(s) + "."
+          : s.status === "latest" ? "You're up to date."
+          : s.status === "error" ? `Could not update: ${s.error}`
+          : ""}
+      </p>
+      {s.notes && updatePending() && <div className="update-notes">{s.notes}</div>}
+      {updatePending()
+        ? <Actions s={s} />
+        : <div className="update-actions"><button className="btn" onClick={check} disabled={checking}>{checking ? "Checking…" : "Check for updates"}</button></div>}
+    </>
+  );
+}
+export const inDesktopApp = !!bridge;
+
 // Row at the top of the notifications panel while an update is waiting.
 export function UpdateNotice() {
   const s = useDesktopUpdate();
