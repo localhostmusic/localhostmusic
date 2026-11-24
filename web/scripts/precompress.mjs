@@ -1,11 +1,12 @@
 // Write .br and .gz copies next to every text asset in dist/, so the server can
 // send them as-is (@fastify/static preCompressed). Uses Node's zlib, no build dependency.
+import { fileURLToPath } from "node:url";
 import { readdirSync, readFileSync, writeFileSync, statSync } from "node:fs";
 import { join, extname } from "node:path";
 import { brotliCompressSync, gzipSync, constants } from "node:zlib";
 
 const TEXT = new Set([".js", ".css", ".html", ".svg", ".json", ".webmanifest", ".txt", ".map", ".xml"]);
-const root = new URL("../dist", import.meta.url).pathname;
+const root = fileURLToPath(new URL("../dist", import.meta.url));
 let files = 0, before = 0, after = 0;
 const walk = dir => {
   for (const name of readdirSync(dir)) {
