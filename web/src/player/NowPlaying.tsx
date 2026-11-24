@@ -362,7 +362,9 @@ export function NowPlaying({ onClose, onOpenArtist, onOpenAlbum }: {
             : vizStyle === "fracture" ? <FractureVisualizer analyser={analyser} />
             : vizStyle === "siphon" ? <SiphonVisualizer analyser={analyser} />
             : vizStyle === "silk" ? <SilkVisualizer analyser={analyser} />
-            : <GlowVisualizer analyser={analyser} style={vizStyle} />}
+            // Keyed: the visualizer releases its WebGL context on the way out, so each
+            // style needs its own canvas.
+            : <GlowVisualizer key={vizStyle} analyser={analyser} style={vizStyle} />}
         </Suspense>
         <button className="np-viz-fs" onClick={toggleVizFs}
           title={vizFs ? "Exit fullscreen" : "Fullscreen"}
