@@ -1860,6 +1860,9 @@ input.search:focus { outline: none; border-color: var(--accent); }
 @media (hover: hover) { .login .login-link:hover { filter: none; color: var(--text); } }
 .login button:disabled { opacity: 0.6; cursor: default; }
 
+.login-skip { display: flex; align-items: center; gap: 9px; margin-top: 2px; font-size: 13px; color: var(--muted); cursor: pointer; }
+.login .login-skip input { width: 16px; height: 16px; margin: 0; padding: 0; flex-shrink: 0; accent-color: var(--accent); }
+
 /* Profile tiles on the sign-in page */
 .profile-grid {
   list-style: none; margin: 0 0 4px; padding: 2px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 6px;
@@ -3376,3 +3379,4 @@ body.dragging-track .pl-card .pl-cover { outline: 2px dashed var(--border); outl
   }
 }
 .signin-list-setting { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+.device-signin { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); border-bottom: none; }

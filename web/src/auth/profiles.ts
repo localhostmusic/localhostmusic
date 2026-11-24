@@ -27,3 +27,23 @@ export function rememberProfile(name: string): string[] {
 export function forgetProfile(name: string): string[] {
   return write(without(name));
 }
+
+// "Don't ask for my password on this device": the secret the server handed this
+// device for a user. Whoever can use this browser can sign in as them, which is
+// the point; it is opt-in per person.
+const TOKENS = "lhm-device-tokens";
+
+function tokens(): Record<string, string> {
+  try {
+    const v = JSON.parse(localStorage.getItem(TOKENS) ?? "{}");
+    return v && typeof v === "object" && !Array.isArray(v) ? v : {};
+  } catch { return {}; }
+}
+
+export const deviceToken = (name: string): string | null => tokens()[name.trim().toLowerCase()] ?? null;
+
+export function setDeviceToken(name: string, token: string | null) {
+  const all = tokens(), key = name.trim().toLowerCase();
+  if (token) all[key] = token; else delete all[key];
+  try { localStorage.setItem(TOKENS, JSON.stringify(all)); } catch { /* not remembered */ }
+}

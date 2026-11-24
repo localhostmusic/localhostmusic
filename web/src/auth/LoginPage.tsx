@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import { Aurora } from "../ui/Aurora";
 import { LogoMark } from "../ui/icons";
-import { forgetProfile, rememberProfile, savedProfiles } from "./profiles";
+import { deviceToken, forgetProfile, rememberProfile, savedProfiles, setDeviceToken } from "./profiles";
 
 // Sign-in. People who have signed in on this device before get a tile to click, so
 // they only type a password. The tiles come from this browser's own storage; the
@@ -17,6 +17,7 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [forgot, setForgot] = useState(false);
+  const [skip, setSkip] = useState(false); // "don't ask for my password on this device"
 
   useEffect(() => { api.signInUsers().then(setListed).catch(() => {}); }, []);
 
@@ -26,8 +27,27 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
   const picking = profiles.length > 0 && !picked && !other;
 
   const reset = () => { setP(""); setErr(""); setForgot(false); };
-  const pick = (name: string) => { setPicked(name); reset(); };
-  const back = () => { setPicked(null); setOther(false); setU(""); reset(); };
+  // A tile for someone who opted in on this device signs them straight in. If the
+  // server no longer accepts the device (password changed, long unused), ask once more.
+  async function pick(name: string) {
+    reset();
+    const token = deviceToken(name);
+    if (token && !busy) {
+      setBusy(true);
+      try { await api.deviceLogin(name, token); rememberProfile(name); onLogin(); return; }
+      catch (e: any) {
+        if (e?.status === 401) setDeviceToken(name, null);
+        setErr(e?.status === 401 ? "Type your password once more for this device." : e?.status === 429 ? "Too many attempts. Wait a moment and try again." : "Could not reach the server.");
+      } finally { setBusy(false); }
+    }
+    setPicked(name);
+  }
+  function remove(name: string) {
+    const token = deviceToken(name);
+    if (token) { api.dropDeviceToken(token).catch(() => {}); setDeviceToken(name, null); }
+    setSaved(forgetProfile(name));
+  }
+  const back = () => { setPicked(null); setOther(false); setU(""); setSkip(false); reset(); };
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -35,7 +55,12 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
     setBusy(true); setErr("");
     try {
       const me = await api.login(picked ?? u, p);
-      rememberProfile(me?.username ?? picked ?? u.trim());
+      const name = me?.username ?? picked ?? u.trim();
+      rememberProfile(name);
+      if (skip) {
+        // Best effort: signing in already worked, so a failure here only means the password is asked next time.
+        try { setDeviceToken(name, (await api.createDeviceToken()).token); } catch { /* */ }
+      }
       onLogin();
     } catch (e: any) {
       setErr(e?.status === 429 ? "Too many attempts. Wait a moment and try again." : picked ? "That password is not right." : "Invalid login");
@@ -54,13 +79,13 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
             <ul className="profile-grid">
               {profiles.map(name => (
                 <li key={name}>
-                  <button type="button" className="profile-tile" onClick={() => pick(name)}>
+                  <button type="button" className="profile-tile" disabled={busy} onClick={() => pick(name)}>
                     <Avatar name={name} />
                     <span className="profile-name">{name}</span>
                   </button>
                   {seen.has(name.toLowerCase()) && (
                     <button type="button" className="profile-remove" aria-label={`Remove ${name} from this device`} title="Remove from this device"
-                      onClick={() => setSaved(forgetProfile(name))}>×</button>
+                      onClick={() => remove(name)}>×</button>
                   )}
                 </li>
               ))}
@@ -82,6 +107,10 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
               </>
             )}
             <input placeholder="Password" type="password" autoFocus={!!picked} autoComplete="current-password" value={p} onChange={e => setP(e.target.value)} />
+            <label className="login-skip">
+              <input type="checkbox" checked={skip} onChange={e => setSkip(e.target.checked)} />
+              <span>Don't ask for my password on this device</span>
+            </label>
             <button key="submit" type="submit" disabled={busy}>Sign in</button>
             {err && <p className="err">{err}</p>}
             <div className="login-links">

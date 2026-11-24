@@ -10,6 +10,7 @@ import { SubsonicSettings } from "./SubsonicSettings";
 import { api } from "../api";
 import { AppUpdateSettings, inDesktopApp, builtIn } from "../ui/desktopUpdate";
 import { PasswordSettings } from "./PasswordSettings";
+import { DeviceSignIn } from "./DeviceSignIn";
 
 type Storage = {
   totalSize: number; tracks: number; albums: number; artists: number;
@@ -197,6 +198,7 @@ export function AccountPage({ username, isAdmin, onNavigate, onLogout }: {
         <div className="account-section">
           <h2 className="account-section-title">Password</h2>
           <PasswordSettings />
+          <DeviceSignIn username={username} />
         </div>
       )}
 

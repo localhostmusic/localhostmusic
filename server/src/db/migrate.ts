@@ -125,6 +125,20 @@ export const MIGRATIONS: Migration[] = [
         CREATE INDEX listens_user_time ON listens(user_id, played_at);`);
     },
   },
+  {
+    version: 6,
+    name: "device-logins",
+    // "Don't ask for my password on this device": a long-lived secret the device
+    // keeps and trades for a session. Only its hash is stored.
+    up(db) {
+      db.exec(`CREATE TABLE device_logins (
+          token_hash TEXT PRIMARY KEY,
+          user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          created_at INTEGER NOT NULL,
+          last_used_at INTEGER NOT NULL);
+        CREATE INDEX device_logins_user ON device_logins(user_id);`);
+    },
+  },
 ];
 
 // Credit-list generation the current scanner writes. A track below this gets its

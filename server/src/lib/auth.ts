@@ -28,6 +28,8 @@ export function passwordProblem(pw: unknown): string | null {
 export async function setPassword(db: Database.Database, userId: number, pw: string): Promise<number> {
   db.prepare("UPDATE users SET password_hash=?, session_version=session_version+1 WHERE id=?")
     .run(await hashPassword(pw), userId);
+  // Devices that skip the password have to earn it again with the new one.
+  db.prepare("DELETE FROM device_logins WHERE user_id=?").run(userId);
   return (db.prepare("SELECT session_version v FROM users WHERE id=?").get(userId) as any).v;
 }
 

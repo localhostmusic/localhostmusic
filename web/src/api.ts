@@ -110,6 +110,11 @@ export const api = {
   login: (username: string, password: string) =>
     req("/api/auth/login", { method: "POST", body: JSON.stringify({ username, password }) }),
   logout: () => req("/api/auth/logout", { method: "POST" }),
+  // "Don't ask for my password on this device": a secret this device keeps and signs in with.
+  createDeviceToken: (): Promise<{ token: string }> => req("/api/auth/device", { method: "POST" }),
+  deviceLogin: (username: string, token: string) =>
+    req("/api/auth/device-login", { method: "POST", body: JSON.stringify({ username, token }) }),
+  dropDeviceToken: (token: string) => req("/api/auth/device", { method: "DELETE", body: JSON.stringify({ token }) }),
   // Usernames the server lists on its sign-in page (empty unless the admin allows it).
   signInUsers: (): Promise<string[]> => req("/api/auth/users"),
   me: () => req("/api/me"),

@@ -3,6 +3,12 @@ import { verifyPassword, signToken, tokenHash, verifyToken, passwordProblem, set
 import { checkLoginAllowed, recordLoginFailure, recordLoginSuccess } from "../lib/ratelimit.js";
 import { config } from "../config.js";
 import { getSettings } from "../lib/settings.js";
+import { createHash, randomBytes } from "node:crypto";
+
+// Device sign-in ("don't ask for my password on this device").
+const DEVICE_IDLE_MS = 180 * 86400_000; // unused this long, it stops working
+const DEVICES_PER_USER = 20;
+const deviceHash = (token: string) => createHash("sha256").update(token).digest("hex");
 
 // The session cookie carries a 30-day token, so it should not travel in the clear,
 // but hardcoding `secure` breaks plain-HTTP LAN installs (the browser drops the
@@ -56,6 +62,51 @@ export async function authRoutes(app: FastifyInstance) {
     getSettings(app.db).showUsersOnSignIn
       ? (app.db.prepare("SELECT username FROM users ORDER BY username COLLATE NOCASE").all() as any[]).map(u => u.username)
       : []);
+
+  // Opt a device in. Called right after a normal sign-in, so the password was just
+  // checked. Returns the secret once; the device keeps it.
+  app.post("/api/auth/device", { preHandler: app.authRequired }, async (req: any) => {
+    const token = randomBytes(32).toString("base64url");
+    const now = Date.now();
+    app.db.prepare("INSERT INTO device_logins(token_hash,user_id,created_at,last_used_at) VALUES(?,?,?,?)").run(deviceHash(token), req.user.id, now, now);
+    // Keep the newest few per user.
+    app.db.prepare(`DELETE FROM device_logins WHERE user_id=? AND token_hash NOT IN
+      (SELECT token_hash FROM device_logins WHERE user_id=? ORDER BY created_at DESC LIMIT ?)`).run(req.user.id, req.user.id, DEVICES_PER_USER);
+    return { token };
+  });
+
+  // Sign in with a device's secret instead of a password. Throttled like a password.
+  app.post("/api/auth/device-login", async (req: FastifyRequest, reply: FastifyReply) => {
+    const name = String((req.body as any)?.username ?? "").trim();
+    const token = (req.body as any)?.token;
+    const retryAfter = checkLoginAllowed(name, req.ip);
+    if (retryAfter !== null) {
+      return reply.code(429).header("Retry-After", String(retryAfter))
+        .send({ error: "Too many failed sign-in attempts. Try again shortly.", retryAfter });
+    }
+    const row = typeof token === "string" && token ? app.db.prepare(
+      `SELECT u.id, u.username, u.is_admin, u.session_version, d.token_hash, d.last_used_at
+       FROM device_logins d JOIN users u ON u.id = d.user_id
+       WHERE d.token_hash = ? AND u.username = ? COLLATE NOCASE`).get(deviceHash(token), name) as any : undefined;
+    if (!row || Date.now() - row.last_used_at > DEVICE_IDLE_MS) {
+      if (row) app.db.prepare("DELETE FROM device_logins WHERE token_hash=?").run(row.token_hash);
+      recordLoginFailure(name, req.ip);
+      return reply.code(401).send({ error: "This device needs your password again." });
+    }
+    recordLoginSuccess(name, req.ip);
+    app.db.prepare("UPDATE device_logins SET last_used_at=? WHERE token_hash=?").run(Date.now(), row.token_hash);
+    const user = { id: row.id, username: row.username, isAdmin: !!row.is_admin };
+    reply.setCookie("lhm_session", signToken({ ...user, sessionVersion: row.session_version }), sessionCookieOptions(req));
+    return user;
+  });
+
+  // Turn it off for one device. Holding the secret is the proof, so no session is needed
+  // (removing a tile happens on the sign-in page).
+  app.delete("/api/auth/device", async (req: FastifyRequest) => {
+    const token = (req.body as any)?.token;
+    if (typeof token === "string" && token) app.db.prepare("DELETE FROM device_logins WHERE token_hash=?").run(deviceHash(token));
+    return { ok: true };
+  });
 
   app.post("/api/auth/logout", async (req: FastifyRequest, reply: FastifyReply) => {
     const token = req.cookies?.lhm_session;
