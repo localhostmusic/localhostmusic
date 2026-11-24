@@ -1855,8 +1855,38 @@ input.search:focus { outline: none; border-color: var(--accent); }
   background: var(--bg-elev2); color: var(--text); font: inherit; font-size: 14px;
 }
 .password-form input:focus { outline: none; border-color: var(--accent); }
-.login-forgot { align-self: flex-start; padding: 0; margin-top: 4px; font-size: 13px; color: var(--muted); }
-.login .login-forgot { background: none; width: auto; }
+.login-links { display: flex; justify-content: space-between; gap: 12px; margin-top: 4px; }
+.login .login-link { align-self: flex-start; margin: 0; padding: 0; width: auto; background: none; font-size: 13px; font-weight: 500; color: var(--muted); }
+@media (hover: hover) { .login .login-link:hover { filter: none; color: var(--text); } }
+.login button:disabled { opacity: 0.6; cursor: default; }
+
+/* Profile tiles on the sign-in page */
+.profile-grid {
+  list-style: none; margin: 0 0 4px; padding: 2px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 6px;
+  max-height: 264px; overflow-y: auto;
+}
+.profile-grid li { position: relative; min-width: 0; }
+.login .profile-tile {
+  display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; margin: 0; padding: 10px 4px;
+  background: none; border-radius: 14px; color: var(--text); font-weight: 600; font-size: 13px; transition: background 0.15s;
+}
+@media (hover: hover) { .login .profile-tile:hover { filter: none; background: rgba(255, 255, 255, 0.07); } }
+.login .profile-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; }
+.profile-avatar {
+  display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+  color: #fff; font-size: 23px; font-weight: 700; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+.profile-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.login .profile-remove {
+  position: absolute; top: 2px; right: 6px; width: 22px; height: 22px; margin: 0; padding: 0; border-radius: 50%;
+  display: grid; place-items: center; background: var(--bg-elev2); border: 1px solid var(--border);
+  color: var(--muted); font-size: 15px; font-weight: 500; line-height: 1; opacity: 0; transition: opacity 0.15s;
+}
+.profile-grid li:hover .profile-remove, .login .profile-remove:focus-visible { opacity: 1; }
+@media (hover: none) { .login .profile-remove { opacity: 0.85; } }
+@media (hover: hover) { .login .profile-remove:hover { filter: none; color: var(--text); } }
+.profile-picked { display: flex; align-items: center; gap: 12px; margin: 16px 0 6px; font-weight: 600; font-size: 16px; }
+.profile-picked .profile-avatar { width: 44px; height: 44px; font-size: 19px; }
 .login-help { font-size: 13px; line-height: 1.5; color: var(--muted); }
 .login-help p { margin: 0 0 6px; }
 .login-help code { font-size: 12px; color: var(--text); overflow-wrap: anywhere; }
@@ -3345,3 +3375,4 @@ body.dragging-track .pl-card .pl-cover { outline: 2px dashed var(--border); outl
     --nav-bottom: calc(max(10px, calc(env(safe-area-inset-bottom, 0px) - 20px)) - var(--vp-gap, 0px));
   }
 }
+.signin-list-setting { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }

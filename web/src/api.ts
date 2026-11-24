@@ -110,6 +110,8 @@ export const api = {
   login: (username: string, password: string) =>
     req("/api/auth/login", { method: "POST", body: JSON.stringify({ username, password }) }),
   logout: () => req("/api/auth/logout", { method: "POST" }),
+  // Usernames the server lists on its sign-in page (empty unless the admin allows it).
+  signInUsers: (): Promise<string[]> => req("/api/auth/users"),
   me: () => req("/api/me"),
   uploadAvatar: (dataUrl: string) => req("/api/me/avatar", { method: "POST", body: JSON.stringify({ image: dataUrl }) }),
   removeAvatar: () => req("/api/me/avatar", { method: "DELETE" }),

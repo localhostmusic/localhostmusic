@@ -270,7 +270,7 @@ export async function adminRoutes(app: FastifyInstance) {
       if (!Number.isFinite(n) || n < 0) return reply.code(400).send({ error: "streamKbps must be a non-negative number (0 = unlimited)" });
       patch.streamKbps = Math.round(n);
     }
-    for (const k of ["showMissingAlbums", "onlineDiscovery", "onlineArtistMeta"] as const) {
+    for (const k of ["showMissingAlbums", "onlineDiscovery", "onlineArtistMeta", "showUsersOnSignIn"] as const) {
       if (typeof b[k] === "boolean") (patch as any)[k] = b[k];
     }
     if (b.discoverRefreshHours !== undefined) {

@@ -526,6 +526,31 @@ function EnrichmentSettings() {
   );
 }
 
+// Off by default: it hands every username to anyone who can open the sign-in page.
+function SignInListSetting() {
+  const [on, setOn] = useState<boolean | null>(null);
+  useEffect(() => { api.getAdminSettings().then((s: any) => setOn(!!s.showUsersOnSignIn)).catch(() => {}); }, []);
+  if (on === null) return null;
+  const flip = () => { const next = !on; setOn(next); api.saveAdminSettings({ showUsersOnSignIn: next }).catch(() => setOn(!next)); };
+  return (
+    <div className="tier-row signin-list-setting">
+      <div className="tier-row-main">
+        <button type="button" role="switch" aria-checked={on} aria-label="Show all users on the sign-in page"
+          className={`tier-switch${on ? " on" : ""}`} onClick={flip}>
+          <span className="tier-switch-knob" />
+        </button>
+        <span className="tier-text">
+          <span className="tier-label">Show all users on the sign-in page</span>
+          <span className="tier-hint">
+            People pick their name and type only a password, even on a new device. Anyone who can reach this server will see
+            the names, so leave it off if the server is open to the internet. Devices always remember who has signed in on them.
+          </span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function SettingsPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [name, setName] = useState("");
@@ -632,6 +657,7 @@ export function SettingsPage() {
             </li>
           ))}
         </ul>
+        <SignInListSetting />
       </section>
 
       <LibraryHealth />

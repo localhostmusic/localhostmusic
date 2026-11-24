@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { verifyPassword, signToken, tokenHash, verifyToken, passwordProblem, setPassword } from "../lib/auth.js";
 import { checkLoginAllowed, recordLoginFailure, recordLoginSuccess } from "../lib/ratelimit.js";
 import { config } from "../config.js";
+import { getSettings } from "../lib/settings.js";
 
 // The session cookie carries a 30-day token, so it should not travel in the clear,
 // but hardcoding `secure` breaks plain-HTTP LAN installs (the browser drops the
@@ -48,6 +49,13 @@ export async function authRoutes(app: FastifyInstance) {
     reply.setCookie("lhm_session", token, sessionCookieOptions(req));
     return { id: user.id, username: user.username, isAdmin: !!user.is_admin };
   });
+
+  // Names for the sign-in page's profile picker. Public, so it stays empty unless
+  // the admin turned the setting on.
+  app.get("/api/auth/users", async () =>
+    getSettings(app.db).showUsersOnSignIn
+      ? (app.db.prepare("SELECT username FROM users ORDER BY username COLLATE NOCASE").all() as any[]).map(u => u.username)
+      : []);
 
   app.post("/api/auth/logout", async (req: FastifyRequest, reply: FastifyReply) => {
     const token = req.cookies?.lhm_session;

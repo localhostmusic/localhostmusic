@@ -21,6 +21,9 @@ export interface AppSettings {
   onlineDiscovery: boolean;   // Discover feed: recommendations, new releases, "For You"
   onlineArtistMeta: boolean;  // fetch artist bios/genres + photos from the web
   discoverRefreshHours: number; // how often Discover auto-refreshes (0 = manual only)
+  // List every username on the sign-in page, for anyone who can reach it. Off by
+  // default: only right for a server that is not reachable from the internet.
+  showUsersOnSignIn: boolean;
 }
 
 export const settingsDefaults = (): AppSettings => ({
@@ -35,6 +38,7 @@ export const settingsDefaults = (): AppSettings => ({
   onlineDiscovery: true,
   onlineArtistMeta: true,
   discoverRefreshHours: 24, // daily
+  showUsersOnSignIn: false,
 });
 
 const KEYS = Object.keys(settingsDefaults()) as (keyof AppSettings)[];
