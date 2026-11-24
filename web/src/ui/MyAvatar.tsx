@@ -29,11 +29,15 @@ export function MyAvatar({ username, size = 32, className = "" }: {
 }) {
   const v = useAvatarVersion();
   const [failed, setFailed] = useState(false);
-  useEffect(() => { setFailed(false); }, [v]); // re-try the image whenever it changes
+  // Re-try the image when it changes, and when a different person signs in.
+  useEffect(() => { setFailed(false); }, [v, username]);
   const initial = (username || "?").slice(0, 1).toUpperCase();
+  // The address names the user. The server answers for whoever is signed in, so one
+  // shared address let the browser show the previous person's picture after a switch.
+  const src = `/api/me/avatar?u=${encodeURIComponent(username)}&v=${v}`;
   return (
     <span className={`my-avatar ${className}`} style={{ width: size, height: size }}>
-      {!failed && <img src={`/api/me/avatar?v=${v}`} alt="" onError={() => setFailed(true)} />}
+      {!failed && <img key={src} src={src} alt="" onError={() => setFailed(true)} />}
       {failed && <span className="my-avatar-i" style={{ fontSize: Math.round(size * 0.42) }}>{initial}</span>}
     </span>
   );

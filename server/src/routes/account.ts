@@ -29,7 +29,8 @@ export async function accountRoutes(app: FastifyInstance) {
   app.get("/api/me/avatar", { preHandler: app.authRequired }, async (req: any, reply) => {
     const row = app.db.prepare("SELECT path FROM user_avatars WHERE user_id=?").get(req.user.id) as any;
     if (!row?.path || !existsSync(row.path)) return reply.code(404).send();
-    reply.type("image/jpeg").header("Cache-Control", "no-cache"); // versioned via ?v= on the client
+    // private: the same address returns a different picture per signed-in user.
+    reply.type("image/jpeg").header("Cache-Control", "private, no-cache").header("Vary", "Cookie");
     return createReadStream(row.path);
   });
 
