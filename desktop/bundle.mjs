@@ -22,6 +22,8 @@ mkdirSync(out, { recursive: true });
 cpSync(join(root, "server", "dist"), join(out, "dist"), { recursive: true });
 cpSync(join(root, "web", "dist"), join(out, "public"), { recursive: true });
 for (const f of ["package.json", "package-lock.json"]) cpSync(join(root, "server", f), join(out, f));
+// The MIT notices for ported code have to travel with the built app.
+for (const f of ["LICENSE", "THIRD-PARTY-NOTICES.md"]) cpSync(join(root, f), join(out, f));
 run("npm ci --omit=dev --no-audit --no-fund", out);
 
 // The Go scanner is much faster on big libraries and keeps the scan out of the

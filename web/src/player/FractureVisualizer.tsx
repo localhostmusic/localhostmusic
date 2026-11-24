@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { parseAccent, rgbHue, hslToRgb, freqAvgAll, vissonanceBins } from "./vizCommon";
 
+// Vissonance is Copyright (c) 2020 Tariq Soliman, MIT License. See THIRD-PARTY-NOTICES.md.
 // "fracture": port of the Fracture preset from tariqksoliman/Vissonance, in raw
 // WebGL. A corridor between a jagged floor and a mirrored ceiling on a white
 // background. 64 strips per side stream toward the camera at a speed driven by

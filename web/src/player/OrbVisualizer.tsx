@@ -5,7 +5,8 @@ import { accentTriad, shapeAmp, freqAvgAll } from "./vizCommon";
 // not their code): a sphere of soft points displaced by 3D simplex-noise FBM, with
 // amplitude driven by the audio and additive blending for the glow.
 
-// Ashima 3D simplex noise (public domain) into FBM, then displace, rotate, project.
+// 3D simplex noise from webgl-noise, Copyright (C) 2011 Ashima Arts, MIT License
+// (see THIRD-PARTY-NOTICES.md), into FBM, then displace, rotate, project.
 const VERT = `
 precision highp float;
 attribute vec3 pos;

@@ -237,6 +237,20 @@ connecting an account.
 
 See [ROADMAP.md](ROADMAP.md).
 
+## Credits
+
+- Four visualizers (Iris, Fracture, Siphon, Silk) are ports of presets from
+  [Vissonance](https://github.com/tariqksoliman/Vissonance) by Tariq Soliman.
+- The Neon and Orb visualizers are modeled on
+  [webgl-music-visualizer](https://github.com/wayne-wu/webgl-music-visualizer) by Wayne Wu.
+- Simplex noise in the shaders is from [webgl-noise](https://github.com/stegu/webgl-noise)
+  by Ashima Arts and Stefan Gustavson.
+- The now-playing layout takes after [Feishin](https://github.com/jeffvli/feishin), and the
+  app as a whole after [Cider](https://cider.sh).
+- The font is [Geist](https://github.com/vercel/geist-font).
+
+Full license notices are in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
 ## License
 
 [GNU AGPL v3](LICENSE). Use, modify and self-host it freely. If you run a modified

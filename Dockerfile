@@ -19,6 +19,7 @@ COPY --from=server-build /app/server/node_modules ./node_modules
 COPY --from=server-build /app/server/dist ./dist
 COPY --from=server-build /app/server/package.json ./
 COPY --from=web /app/web/dist ./public
+COPY LICENSE THIRD-PARTY-NOTICES.md ./
 ENV MUSIC_DIR=/music DATA_DIR=/data PORT=8585
 EXPOSE 8585
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s \

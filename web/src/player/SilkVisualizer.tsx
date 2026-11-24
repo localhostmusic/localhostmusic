@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { parseAccent, rgbHue, hslToRgb, freqAvgAll, vissonanceBins } from "./vizCommon";
 
+// Vissonance is Copyright (c) 2020 Tariq Soliman, MIT License. See THIRD-PARTY-NOTICES.md.
 // "silk": port of the Silk preset from tariqksoliman/Vissonance, in raw WebGL.
 // Four mirrored streams of 512 hexagon dots, one per spectrum bin, each drifting
 // vertically at a speed set by its bin's level and wrapping at +/-30.

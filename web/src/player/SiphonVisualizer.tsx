@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { parseAccent, rgbHue, hslToRgb, freqAvgAll, vissonanceBins } from "./vizCommon";
 
+// Vissonance is Copyright (c) 2020 Tariq Soliman, MIT License. See THIRD-PARTY-NOTICES.md.
 // "siphon": port of the Siphon preset from tariqksoliman/Vissonance, in raw WebGL.
 // A tube of 36 rings streams past the camera. Each ring that respawns at the back
 // is stamped with that moment's spectrum (spikes pointing inward) and hue, so the

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { parseAccent, rgbHue, hslToRgb, freqAvgAll, vissonanceBins } from "./vizCommon";
 
+// Vissonance is Copyright (c) 2020 Tariq Soliman, MIT License. See THIRD-PARTY-NOTICES.md.
 // "iris": port of the Iris preset from tariqksoliman/Vissonance, in raw WebGL.
 // Brightness is linear in view depth, with no bloom (MSAA only). The analyser's own
 // smoothing is the only envelope. The hue is anchored at the album accent instead
