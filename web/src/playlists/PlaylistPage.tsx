@@ -4,6 +4,7 @@ import { api } from "../api";
 import { usePlayer, type Track } from "../player/PlayerProvider";
 import { PlayIcon, NextIcon, QueueIcon, RadioIcon, AlbumIcon, TrashIcon } from "../ui/icons";
 import { openMenuAt, openMenuFrom, type MenuSpec } from "../ui/ContextMenu";
+import { useSelection, selectionMenu, selectClick, toggleSelected } from "../ui/selection";
 import { Stars } from "../ui/Stars";
 import { PlaylistCover } from "./PlaylistCover";
 import { PlaylistEditModal } from "./PlaylistEditModal";
@@ -41,6 +42,7 @@ export function PlaylistPage({ playlistId, onBack, onOpenAlbum }: {
   const [ratings, setRatings] = useState<Record<number, number>>({});
   const [refreshing, setRefreshing] = useState(false);
   const player = usePlayer();
+  const sel = useSelection();
   const dragIdx = useRef<number | null>(null);
 
   const load = () => api.getPlaylist(playlistId).then((p: any) => { setPl(p); setTracks(p.tracks); }).catch(() => {});
@@ -71,7 +73,10 @@ export function PlaylistPage({ playlistId, onBack, onOpenAlbum }: {
         { label: "Add to queue", icon: <QueueIcon size={16} />, onSelect: () => player.addToQueue(t) },
         { label: "Start radio", icon: <RadioIcon size={16} />, onSelect: () => player.startRadio(t) },
       ],
-      t.albumId != null ? [{ label: "Go to album", icon: <AlbumIcon size={16} />, onSelect: () => onOpenAlbum(t.albumId!) }] : [],
+      [
+        ...(t.albumId != null ? [{ label: "Go to album", icon: <AlbumIcon size={16} />, onSelect: () => onOpenAlbum(t.albumId!) }] : []),
+        { label: "Select", icon: <span className="ctx-check">✓</span>, onSelect: () => toggleSelected(tracks, i) },
+      ],
       smart ? [] : [{ label: "Remove from playlist", icon: <TrashIcon size={16} />, danger: true, onSelect: () => remove(t.id) }],
     ],
     playlist: { ids: async () => [t.id], defaultName: t.title },
@@ -132,14 +137,15 @@ export function PlaylistPage({ playlistId, onBack, onOpenAlbum }: {
         {visible.map((t, i) => (
           <li
             key={t.id}
-            className={`trk${player.current?.id === t.id ? " playing" : ""}${dragOver === i ? " drag-over" : ""}`}
+            className={`trk${player.current?.id === t.id ? " playing" : ""}${dragOver === i ? " drag-over" : ""}${sel.has(t.id) ? " selected" : ""}${sel.count ? " selecting" : ""}`}
+            onClickCapture={e => selectClick(e, tracks, i)}
             draggable={!smart}
             onDragStart={() => { if (!smart) dragIdx.current = i; }}
             onDragOver={e => { if (smart) return; e.preventDefault(); setDragOver(i); }}
             onDragLeave={() => setDragOver(d => (d === i ? null : d))}
             onDrop={() => !smart && onDrop(i)}
             onDoubleClick={() => player.playNow(queue(), i)}
-            onContextMenu={e => openMenuAt(e, rowMenu(t, i))}
+            onContextMenu={e => openMenuAt(e, sel.has(t.id) ? selectionMenu(player) : rowMenu(t, i))}
           >
             {smart ? <span className="drag-handle drag-handle-off" aria-hidden="true" /> : <span className="drag-handle" title="Drag to reorder">⠿</span>}
             <button className="row-play" onClick={() => player.playNow(queue(), i)} aria-label={`Play ${t.title}`}>
@@ -147,6 +153,7 @@ export function PlaylistPage({ playlistId, onBack, onOpenAlbum }: {
                 ? <span className={`eq${player.isPlaying ? "" : " paused"}`} aria-label="Now playing"><i /><i /><i /></span>
                 : <span className="num">{i + 1}</span>}
               <span className="row-play-icon"><PlayIcon size={14} /></span>
+              <span className="row-check" aria-hidden="true">{sel.has(t.id) ? "✓" : ""}</span>
             </button>
             <div className="trk-main">
               <MarqueeText className="trk-title" text={t.title} />

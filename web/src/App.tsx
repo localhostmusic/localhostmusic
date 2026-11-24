@@ -24,6 +24,7 @@ import { NightcoreOverlay } from "./ui/NightcoreOverlay";
 import { NetBadge } from "./ui/NetBadge";
 import { UpdatePrompt } from "./ui/desktopUpdate";
 import { ContextMenuHost, PLAYLISTS_CHANGED } from "./ui/ContextMenu";
+import { SelectionBar, clearSelection } from "./ui/selection";
 const DebugPanel = lazy(() => import("./ui/DebugPanel").then(m => ({ default: m.DebugPanel })));
 import { dlog } from "./ui/debugLog";
 import { startNotificationPolling } from "./ui/notifications";
@@ -242,6 +243,8 @@ export default function App() {
   }, [hist.idx]);
 
   const view = hist.stack[hist.idx];
+  // A selection belongs to the page it was made on.
+  useEffect(() => { clearSelection(); }, [view]);
   const sameView = (a: View, b: View) => a.name === b.name && (a as any).id === (b as any).id;
   const push = (v: View) => {
     if (sameView(hist.stack[hist.idx], v)) return;
@@ -482,6 +485,7 @@ export default function App() {
         <Toaster />
         <UpdatePrompt />
         <ContextMenuHost />
+        <SelectionBar />
       </div>
       {expanded && <NowPlaying onClose={closePlayer} onOpenArtist={openArtistFromPlayer} onOpenAlbum={openAlbumFromPlayer} />}
       <NetBadge />

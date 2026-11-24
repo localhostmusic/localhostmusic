@@ -1668,6 +1668,31 @@ body.dragging-track .nav-item.nav-sub {
 .trk-more { position: relative; display: none; }
 .trk-menu-backdrop { position: fixed; inset: 0; z-index: 30; }
 
+/* ---------- Multi-select ---------- */
+.track-list li.trk.selected { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+.row-check {
+  position: absolute; inset: 3px; display: none; place-items: center; border-radius: 6px;
+  border: 1.5px solid var(--muted); font-size: 12px; font-weight: 800; line-height: 1; color: var(--accent-contrast, #fff);
+}
+.trk.selecting .row-check { display: grid; }
+.trk.selecting .row-play .num, .trk.selecting .row-play .eq, .trk.selecting .row-play-icon { opacity: 0 !important; }
+.trk.selected .row-check { background: var(--accent); border-color: var(--accent); }
+.trk.selecting { cursor: pointer; }
+.select-bar {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 180;
+  bottom: calc(var(--pb-h, 90px) + 30px); max-width: calc(100vw - 24px);
+  display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 16px; overflow-x: auto;
+  background: var(--glass-strong); -webkit-backdrop-filter: blur(28px) saturate(1.4); backdrop-filter: blur(28px) saturate(1.4);
+  border: 1px solid var(--glass-border); border-radius: 999px; box-shadow: 0 18px 50px rgba(0,0,0,0.55);
+  animation: select-in 0.16s ease-out;
+}
+@keyframes select-in { from { opacity: 0; } }
+.select-bar .btn { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; padding: 7px 13px; font-size: 13px; }
+.select-count { font-weight: 650; font-size: 13.5px; white-space: nowrap; margin-right: 4px; font-variant-numeric: tabular-nums; }
+.select-clear { padding: 7px 11px !important; }
+.ctx-check { font-weight: 800; }
+.ctx-static { padding: 7px 10px; }
+
 /* ---------- Context menu (right-click and the "more" buttons) ---------- */
 .ctx-menu {
   position: fixed; z-index: 400; width: 252px; max-width: calc(100vw - 16px); padding: 6px;

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { PlayIcon, HeartIcon, QueueIcon, NextIcon, RadioIcon, AlbumIcon, EditIcon, TrashIcon } from "../ui/icons";
 import { openMenuAt, openMenuFrom, type MenuSpec } from "../ui/ContextMenu";
+import { useRowSelect, selectionMenu, toggleSelected } from "../ui/selection";
 import { MarqueeText } from "../ui/MarqueeText";
 import { Stars } from "../ui/Stars";
 import { TRACK_DND } from "../ui/Sidebar";
@@ -41,6 +42,7 @@ interface Props {
 export function TrackRow({ tracks, i, onPlay, onOpenAlbum, isCurrent, isPlaying, isFav, onToggleFav, rating, onRate, hideAlbum, onEditMeta, onDeleteTrack, onOpenArtist }: Props) {
   const t = tracks[i];
   const player = usePlayer();
+  const pick = useRowSelect(tracks, i);
 
   // Touch swipe actions (phone). Swipe left past the threshold queues the track,
   // swipe right toggles favorite. The row follows the finger, rubber-bands past
@@ -118,6 +120,7 @@ export function TrackRow({ tracks, i, onPlay, onOpenAlbum, isCurrent, isPlaying,
         { label: isFav ? "Remove from Favorites" : "Add to Favorites", icon: <HeartIcon size={16} filled={isFav} />, onSelect: actFav },
         ...(t.albumId != null && onOpenAlbum && !hideAlbum
           ? [{ label: "Go to album", icon: <AlbumIcon size={16} />, onSelect: () => onOpenAlbum(t.albumId) }] : []),
+        { label: "Select", icon: <span className="ctx-check">✓</span>, onSelect: () => toggleSelected(tracks, i) },
       ],
       [
         ...(onEditMeta ? [{ label: "Fix metadata", icon: <EditIcon size={16} />, onSelect: () => onEditMeta(t) }] : []),
@@ -129,8 +132,9 @@ export function TrackRow({ tracks, i, onPlay, onOpenAlbum, isCurrent, isPlaying,
 
   return (
     <li
-      className={`trk${isCurrent ? " playing" : ""}`}
-      onContextMenu={e => openMenuAt(e, menuSpec())}
+      className={`trk${isCurrent ? " playing" : ""}${pick.selected ? " selected" : ""}${pick.selecting ? " selecting" : ""}`}
+      onClickCapture={pick.onClickCapture}
+      onContextMenu={e => openMenuAt(e, pick.selected ? selectionMenu(player) : menuSpec())}
       style={dragging ? { overflow: "hidden" } : undefined}
       draggable
       onDragStart={e => {
@@ -168,6 +172,7 @@ export function TrackRow({ tracks, i, onPlay, onOpenAlbum, isCurrent, isPlaying,
         {isCurrent
           ? <span className={`eq${isPlaying ? "" : " paused"}`} aria-label="Now playing"><i /><i /><i /></span>
           : <span className="num">{i + 1}</span>}
+        <span className="row-check" aria-hidden="true">{pick.selected ? "✓" : ""}</span>
         <span className="row-play-icon"><PlayIcon size={14} /></span>
       </button>
 

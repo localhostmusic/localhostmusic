@@ -22,6 +22,8 @@ export interface MenuSpec {
   sections: MenuItem[][];
   // Adds the "Add to playlist" step. `ids` may fetch (an album's tracks).
   playlist?: { ids: () => Promise<number[]>; defaultName: string; onAdded?: (playlistName: string) => void };
+  // Open straight on the playlist step (the selection bar's button).
+  startAt?: "playlists";
 }
 
 type Target = MenuSpec | { album: { id: number; title: string; artist?: string }; onOpen?: (id: number) => void };
@@ -57,11 +59,16 @@ export function ContextMenuHost() {
   const panel = useRef<HTMLDivElement>(null);
 
   const close = () => setOpen(null);
+  const loadPlaylists = () => {
+    setStep("playlists");
+    api.getPlaylists().then((all: any[]) => setPlaylists(all.filter(p => !p.smart))).catch(() => setPlaylists([]));
+  };
 
   useEffect(() => {
     show = (place, target) => {
       const spec = "album" in target ? albumSpec(target.album, target.onOpen) : target;
-      setStep("main"); setNaming(null); setPlaylists(null); setPos(null);
+      setNaming(null); setPlaylists(null); setPos(null);
+      if (spec.startAt === "playlists") loadPlaylists(); else setStep("main");
       setRated(spec.rating?.value ?? 0);
       setOpen({ place, spec });
     };
@@ -126,10 +133,7 @@ export function ContextMenuHost() {
   const { spec } = open;
   const pl = spec.playlist;
 
-  const openPlaylists = () => {
-    setStep("playlists");
-    api.getPlaylists().then((all: any[]) => setPlaylists(all.filter(p => !p.smart))).catch(() => setPlaylists([]));
-  };
+
 
   const addTo = async (id: number, name: string) => {
     close();
@@ -188,7 +192,7 @@ export function ContextMenuHost() {
           ))}
           {pl && (
             <div className="ctx-group">
-              <button role="menuitem" onClick={openPlaylists}>
+              <button role="menuitem" onClick={loadPlaylists}>
                 <span className="ctx-icon"><PlaylistIcon size={16} /></span>Add to playlist
                 <span className="ctx-chevron"><ChevronDownIcon size={16} /></span>
               </button>
@@ -198,9 +202,11 @@ export function ContextMenuHost() {
       ) : (
         <>
           <div className="ctx-group">
-            <button className="ctx-back" onClick={() => { setStep("main"); setNaming(null); }}>
-              <span className="ctx-chevron back"><ChevronDownIcon size={16} /></span>Add to playlist
-            </button>
+            {spec.startAt === "playlists"
+              ? <div className="ctx-back ctx-static">Add to playlist</div>
+              : <button className="ctx-back" onClick={() => { setStep("main"); setNaming(null); }}>
+                  <span className="ctx-chevron back"><ChevronDownIcon size={16} /></span>Add to playlist
+                </button>}
           </div>
           <div className="ctx-group">
             {naming === null ? (
