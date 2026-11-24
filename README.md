@@ -5,7 +5,9 @@ files and stream your library to a browser, a phone, a desktop app or a TV.
 
 <img src="docs/screenshots/desktop-home.webp" alt="Home on desktop" width="880">
 
-<img src="docs/screenshots/desktop-album.webp" alt="Album page" width="436"> <img src="docs/screenshots/desktop-now-playing.webp" alt="Player with the queue open" width="436">
+<img src="docs/screenshots/desktop-album.webp" alt="Album page" width="436"> <img src="docs/screenshots/desktop-now-playing.webp" alt="Player with synced lyrics and a visualizer" width="436">
+
+<img src="docs/screenshots/desktop-lyrics-sync.webp" alt="Editor for timing lyrics to a song" width="436"> <img src="docs/screenshots/desktop-visualizer.webp" alt="Player with the bars visualizer" width="436">
 
 <img src="docs/screenshots/phone-home.webp" alt="Home on a phone" width="220"> <img src="docs/screenshots/phone-genres.webp" alt="Genres on a phone" width="220"> <img src="docs/screenshots/phone-now-playing.webp" alt="Player on a phone" width="220">
 
