@@ -7,4 +7,14 @@ contextBridge.exposeInMainWorld("lhmDesktop", {
   state: () => ipcRenderer.invoke("setup:state"),
   useFolder: (dir) => ipcRenderer.invoke("setup:local", dir),
   useServer: (url) => ipcRenderer.invoke("setup:remote", url),
+  update: {
+    state: () => ipcRenderer.invoke("update:state"),
+    download: () => ipcRenderer.invoke("update:download"),
+    install: () => ipcRenderer.invoke("update:install"),
+    onChange: (cb) => {
+      const handler = (_event, state) => cb(state);
+      ipcRenderer.on("update:changed", handler);
+      return () => ipcRenderer.removeListener("update:changed", handler);
+    },
+  },
 });

@@ -22,6 +22,7 @@ import { Aurora } from "./ui/Aurora";
 import { AdaptiveTheme } from "./ui/AdaptiveTheme";
 import { NightcoreOverlay } from "./ui/NightcoreOverlay";
 import { NetBadge } from "./ui/NetBadge";
+import { UpdatePrompt } from "./ui/desktopUpdate";
 const DebugPanel = lazy(() => import("./ui/DebugPanel").then(m => ({ default: m.DebugPanel })));
 import { dlog } from "./ui/debugLog";
 import { startNotificationPolling } from "./ui/notifications";
@@ -474,6 +475,7 @@ export default function App() {
         {/* Inside .shell: the toast stack uses the phone geometry vars
             (--nav-h/--pb-h/--float-gap/--nav-bottom), which are scoped to .shell. */}
         <Toaster />
+        <UpdatePrompt />
       </div>
       {expanded && <NowPlaying onClose={closePlayer} onOpenArtist={openArtistFromPlayer} onOpenAlbum={openAlbumFromPlayer} />}
       <NetBadge />

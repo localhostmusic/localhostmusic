@@ -263,6 +263,10 @@ function createWindow() {
     }
     return { action: "allow" };
   });
+  // Each page has to ask for the update state again before it is trusted to show it.
+  mainWindow.webContents.on("did-start-navigation", (details) => {
+    if (details.isMainFrame && !details.isSameDocument) uiAttached = false;
+  });
   mainWindow.webContents.on("will-navigate", (event, url) => {
     if (!isAppOrigin(url)) {
       event.preventDefault();
@@ -325,6 +329,14 @@ function registerIpc() {
     return res.canceled ? null : res.filePaths[0];
   });
 
+  ipcMain.handle("update:state", (event) => {
+    if (!fromApp(event) || fromWelcome(event)) return { status: "idle" };
+    uiAttached = true;
+    return { ...update, current: app.getVersion() };
+  });
+  ipcMain.handle("update:download", (event) => { if (fromApp(event)) downloadUpdate(); });
+  ipcMain.handle("update:install", (event) => { if (fromApp(event)) installUpdate(); });
+
   ipcMain.handle("setup:state", (event) => {
     if (!fromWelcome(event)) return {};
     const { mode, musicDir, serverUrl } = loadConfig();
@@ -366,9 +378,15 @@ function registerIpc() {
 }
 
 // ---------- updates ----------
+//
+// The web UI shows update prompts when it can (see web/src/ui/desktopUpdate.tsx).
+// A page that never asked for the state, such as the welcome screen or an older
+// server's UI, gets native dialogs instead.
 
 let updater = null;
 let manualCheck = false;
+let uiAttached = false;
+let update = { status: "idle" };
 
 const plainNotes = (notes) => {
   const text = Array.isArray(notes) ? notes.map((n) => n.note).join("\n\n") : String(notes || "");
@@ -376,48 +394,105 @@ const plainNotes = (notes) => {
     .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\n{3,}/g, "\n\n").trim();
 };
 
+function setUpdate(patch) {
+  update = { ...update, ...patch, current: app.getVersion() };
+  if (uiAttached && mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send("update:changed", update);
+}
+
+const downloadUpdate = () => {
+  if (!updater || update.status !== "available") return;
+  setUpdate({ status: "downloading", percent: 0 });
+  updater.downloadUpdate().catch(() => {});
+};
+
+const installUpdate = () => {
+  if (!updater || update.status !== "ready") return;
+  app.isQuitting = true;
+  updater.quitAndInstall();
+};
+
+async function nativePrompt(kind) {
+  const ready = kind === "ready";
+  const { response } = await dialog.showMessageBox(mainWindow, {
+    type: "info",
+    buttons: [ready ? "Restart now" : "Update", "Later"],
+    defaultId: 0,
+    cancelId: 1,
+    message: ready ? "The update is ready" : `Localhost Music ${update.version} is available`,
+    detail: ready ? "Restart Localhost Music to finish installing it." : update.notes || "A new version is ready to download.",
+  });
+  if (response === 0) (ready ? installUpdate : downloadUpdate)();
+}
+
+// Development only (LHM_FAKE_UPDATE=1 npm start): acts out an update so the prompts
+// can be worked on without publishing releases.
+function fakeUpdater() {
+  const fake = new (require("node:events"))();
+  fake.checkForUpdates = async () => {
+    fake.emit("update-available", { version: "9.9.9", releaseNotes: "<p>Pretend release.</p><ul><li>First change</li><li>Second change</li></ul>" });
+  };
+  fake.downloadUpdate = async () => {
+    for (let percent = 20; percent <= 100; percent += 20) {
+      await new Promise((r) => setTimeout(r, 400));
+      fake.emit("download-progress", { percent });
+    }
+    fake.emit("update-downloaded", {});
+  };
+  fake.quitAndInstall = () => app.quit();
+  return fake;
+}
+
 function setupUpdates() {
   // Only the installed Windows app and the Linux AppImage can replace themselves.
-  if (!app.isPackaged) return;
-  try {
-    updater = require("electron-updater").autoUpdater;
-  } catch {
+  if (app.isPackaged) {
+    try {
+      updater = require("electron-updater").autoUpdater;
+    } catch {
+      return;
+    }
+  } else if (process.env.LHM_FAKE_UPDATE) {
+    updater = fakeUpdater();
+  } else {
     return;
   }
   updater.autoDownload = false;
 
-  updater.on("update-available", async (info) => {
+  updater.on("update-available", (info) => {
     manualCheck = false;
-    const { response } = await dialog.showMessageBox(mainWindow, {
-      type: "info",
-      buttons: ["Update", "Later"],
-      defaultId: 0,
-      cancelId: 1,
-      message: `Localhost Music ${info.version} is available`,
-      detail: plainNotes(info.releaseNotes) || "A new version is ready to download.",
-    });
-    if (response === 0) updater.downloadUpdate().catch(() => {});
+    // A repeat check must not reset a download in progress.
+    if (update.status === "downloading" || update.status === "ready") return;
+    setUpdate({ status: "available", version: info.version, notes: plainNotes(info.releaseNotes) });
+    if (!uiAttached) nativePrompt("available");
   });
   updater.on("update-not-available", () => {
-    if (manualCheck) dialog.showMessageBox(mainWindow, { type: "info", message: "You're up to date.", detail: `Version ${app.getVersion()}` });
+    if (manualCheck) {
+      if (uiAttached) {
+        setUpdate({ status: "latest" });
+        setTimeout(() => { if (update.status === "latest") setUpdate({ status: "idle" }); }, 5000);
+      } else {
+        dialog.showMessageBox(mainWindow, { type: "info", message: "You're up to date.", detail: `Version ${app.getVersion()}` });
+      }
+    }
     manualCheck = false;
   });
-  updater.on("update-downloaded", async () => {
-    const { response } = await dialog.showMessageBox(mainWindow, {
-      type: "info",
-      buttons: ["Restart now", "Later"],
-      defaultId: 0,
-      cancelId: 1,
-      message: "The update is ready",
-      detail: "Restart Localhost Music to finish installing it.",
-    });
-    if (response === 0) {
-      app.isQuitting = true;
-      updater.quitAndInstall();
-    }
+  updater.on("download-progress", (p) => {
+    if (update.status === "downloading") setUpdate({ percent: p.percent });
+  });
+  updater.on("update-downloaded", () => {
+    setUpdate({ status: "ready", percent: 100 });
+    if (!uiAttached) nativePrompt("ready");
   });
   updater.on("error", (err) => {
-    if (manualCheck) dialog.showMessageBox(mainWindow, { type: "warning", message: "Could not check for updates", detail: String(err?.message || err) });
+    const message = String(err?.message || err).split("\n")[0];
+    if (update.status === "downloading" || manualCheck) {
+      if (uiAttached) {
+        setUpdate({ status: "error", error: message });
+        setTimeout(() => { if (update.status === "error") setUpdate({ status: update.version ? "available" : "idle" }); }, 8000);
+      } else {
+        dialog.showMessageBox(mainWindow, { type: "warning", message: "The update did not work", detail: message });
+        update = { ...update, status: update.version ? "available" : "idle" };
+      }
+    }
     manualCheck = false;
   });
 
@@ -429,6 +504,12 @@ function setupUpdates() {
 function checkForUpdates() {
   if (!updater) {
     dialog.showMessageBox(mainWindow, { type: "info", message: "Updates are only available in the installed app." });
+    return;
+  }
+  if (update.status !== "idle") {
+    // Already known: bring the prompt back instead of checking again.
+    if (uiAttached) setUpdate({ asked: Date.now() });
+    else nativePrompt(update.status === "ready" ? "ready" : "available");
     return;
   }
   manualCheck = true;

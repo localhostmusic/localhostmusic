@@ -419,6 +419,22 @@ button { touch-action: manipulation; }
   box-shadow: 0 18px 50px rgba(0,0,0,0.5);
 }
 .notif-head { padding: 12px 14px 8px; font-weight: 700; font-size: 14px; }
+.update-notice { margin: 0 8px 8px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--accent-soft); display: flex; flex-direction: column; gap: 6px; }
+.update-card {
+  position: fixed; right: 20px; bottom: calc(var(--pb-h, 90px) + 28px); z-index: 190; width: min(340px, calc(100vw - 32px));
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 6px;
+  background: var(--glass-strong); -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border); border-radius: var(--radius-lg); box-shadow: 0 18px 50px rgba(0,0,0,0.5);
+}
+.update-brief { font-size: 13.5px; }
+.update-title { font-weight: 700; font-size: 15px; }
+.update-sub { font-size: 12.5px; color: var(--muted); }
+.update-notes-toggle { align-self: flex-start; background: none; border: 0; padding: 0; color: var(--accent); font: inherit; font-size: 13px; cursor: pointer; }
+.update-notes { white-space: pre-wrap; font-size: 12.5px; line-height: 1.45; color: var(--muted); max-height: 180px; overflow-y: auto; }
+.update-actions { display: flex; gap: 8px; margin-top: 6px; }
+.update-progress { position: relative; height: 28px; margin-top: 6px; border-radius: 999px; background: var(--bg-elev2); overflow: hidden; }
+.update-progress > div { position: absolute; inset: 0 auto 0 0; background: var(--accent); opacity: 0.55; transition: width 0.3s; }
+.update-progress > span { position: relative; display: block; text-align: center; line-height: 28px; font-size: 12.5px; font-weight: 600; }
 .notif-empty { padding: 8px 14px 18px; color: var(--muted); font-size: 13px; }
 .notif-list { list-style: none; margin: 0; padding: 0 0 6px; }
 .notif-list li { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px 10px 14px; position: relative; }

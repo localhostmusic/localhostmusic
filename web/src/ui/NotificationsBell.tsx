@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { BellIcon } from "./icons";
 import { getNotifications, subscribeNotifications, markAllRead, refreshNotifications } from "./notifications";
 import { api } from "../api";
+import { UpdateNotice, updatePending, useDesktopUpdate } from "./desktopUpdate";
 
 function ago(ts: number): string {
   const s = Math.floor((Date.now() - ts) / 1000);
@@ -26,7 +27,9 @@ export function NotificationsBell({ align = "left" }: { align?: "left" | "right"
   const wrapRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const { items, unread } = getNotifications();
+  const { items, unread: unreadItems } = getNotifications();
+  useDesktopUpdate();
+  const unread = unreadItems + (updatePending() ? 1 : 0);
 
   useEffect(() => {
     if (!open) return;
@@ -78,8 +81,9 @@ export function NotificationsBell({ align = "left" }: { align?: "left" | "right"
           style={{ position: "fixed", top: pos.top, left: pos.left, right: pos.right }}
         >
           <div className="notif-head">Notifications</div>
+          <UpdateNotice />
           {items.length === 0 ? (
-            <div className="notif-empty">You're all caught up.</div>
+            updatePending() ? null : <div className="notif-empty">You're all caught up.</div>
           ) : (
             <ul className="notif-list">
               {items.map(n => (
