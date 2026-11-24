@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import { AlbumCard } from "./AlbumCard";
 import { usePlayer, type Track } from "../player/PlayerProvider";
-import { PlayIcon, StarIcon } from "../ui/icons";
+import { PlayIcon, StarIcon, BookIcon } from "../ui/icons";
+import { openMenuFrom } from "../ui/ContextMenu";
 import { MetadataModal } from "./MetadataModal";
 import { TrackRow } from "./TrackRow";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
@@ -33,7 +34,6 @@ export function AlbumPage({ albumId, onBack, onOpenArtist, onOpenAlbum, isAdmin 
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [fixing, setFixing] = useState<Track | null>(null);
   const [delTrack, setDelTrack] = useState<Track | null>(null);
-  const [adminMenu, setAdminMenu] = useState(false); // admin overflow menu on the header
   const [markBook, setMarkBook] = useState(false);    // confirm "mark as audiobook"
   const [tint, setTint] = useState<string | null>(null); // dominant colour of this album's art
   const [moreBy, setMoreBy] = useState<any[]>([]); // the artist's other albums, for the shelf under the songs
@@ -181,15 +181,8 @@ export function AlbumPage({ albumId, onBack, onOpenArtist, onOpenAlbum, isAdmin 
             <DownloadButton kind="album" id={album.id} name={album.title} tracks={queue} />
             {isAdmin && (
               <div className="album-menu-wrap">
-                <button className="btn album-more" aria-label="More actions" title="More actions" onClick={() => setAdminMenu(m => !m)}>⋯</button>
-                {adminMenu && (
-                  <>
-                    <div className="trk-menu-backdrop" onClick={() => setAdminMenu(false)} />
-                    <ul className="trk-menu down">
-                      <li><button onClick={() => { setAdminMenu(false); setMarkBook(true); }}>Mark as audiobook</button></li>
-                    </ul>
-                  </>
-                )}
+                <button className="btn album-more" aria-label="More actions" title="More actions"
+                  onClick={e => openMenuFrom(e.currentTarget, { sections: [[{ label: "Mark as audiobook", icon: <BookIcon size={16} />, onSelect: () => setMarkBook(true) }]] })}>⋯</button>
               </div>
             )}
           </div>

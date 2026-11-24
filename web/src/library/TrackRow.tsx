@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { PlayIcon, HeartIcon, QueueIcon } from "../ui/icons";
+import { PlayIcon, HeartIcon, QueueIcon, NextIcon, RadioIcon, AlbumIcon, EditIcon, TrashIcon } from "../ui/icons";
+import { openMenuAt, openMenuFrom, type MenuSpec } from "../ui/ContextMenu";
 import { MarqueeText } from "../ui/MarqueeText";
 import { Stars } from "../ui/Stars";
 import { TRACK_DND } from "../ui/Sidebar";
@@ -37,11 +38,9 @@ interface Props {
   onOpenArtist?: (id: number, name: string) => void;
 }
 
-export function TrackRow({ tracks, i, onPlay, onOpenAlbum, isCurrent, isPlaying, isFav, onToggleFav, rating, onRate, playlists, onAddToPlaylist, hideAlbum, onEditMeta, onDeleteTrack, onOpenArtist }: Props) {
+export function TrackRow({ tracks, i, onPlay, onOpenAlbum, isCurrent, isPlaying, isFav, onToggleFav, rating, onRate, hideAlbum, onEditMeta, onDeleteTrack, onOpenArtist }: Props) {
   const t = tracks[i];
   const player = usePlayer();
-  const [menu, setMenu] = useState(false);
-  const [more, setMore] = useState(false);
 
   // Touch swipe actions (phone). Swipe left past the threshold queues the track,
   // swipe right toggles favorite. The row follows the finger, rubber-bands past
@@ -100,15 +99,38 @@ export function TrackRow({ tracks, i, onPlay, onOpenAlbum, isCurrent, isPlaying,
   const actQueue = () => { player.addToQueue(t); flashRow(FLASH_QUEUE); toast("Added to queue", "＋"); };
   const actNext = () => { player.playNext(t); flashRow(FLASH_QUEUE); toast("Playing next", "＋"); };
   const actFav = () => { const wasFav = isFav; onToggleFav(t.id); flashRow(FLASH_FAV); toast(wasFav ? "Removed from Favorites" : "Added to Favorites", "♥"); };
-  const actPlaylist = (pid: number, name: string) => { onAddToPlaylist(pid, t.id); flashRow(FLASH_QUEUE); toast(`Added to ${name}`, "＋"); };
 
   // Every credited artist, not only the primary. Views that don't send the credit
   // list fall back to the primary name as plain text.
   const credits = t.artists as { id: number; name: string }[] | undefined;
 
+  const menuSpec = (): MenuSpec => ({
+    header: { title: t.title, sub: credits?.map(a => a.name).join(", ") || t.artist, albumId: t.albumId },
+    rating: onRate ? { value: rating ?? 0, onRate: n => onRate(t.id, n) } : undefined,
+    sections: [
+      [
+        { label: "Play", icon: <PlayIcon size={16} />, onSelect: () => onPlay(tracks, i) },
+        { label: "Play next", icon: <NextIcon size={16} />, onSelect: actNext },
+        { label: "Add to queue", icon: <QueueIcon size={16} />, onSelect: actQueue },
+        { label: "Start radio", icon: <RadioIcon size={16} />, onSelect: () => player.startRadio(t) },
+      ],
+      [
+        { label: isFav ? "Remove from Favorites" : "Add to Favorites", icon: <HeartIcon size={16} filled={isFav} />, onSelect: actFav },
+        ...(t.albumId != null && onOpenAlbum && !hideAlbum
+          ? [{ label: "Go to album", icon: <AlbumIcon size={16} />, onSelect: () => onOpenAlbum(t.albumId) }] : []),
+      ],
+      [
+        ...(onEditMeta ? [{ label: "Fix metadata", icon: <EditIcon size={16} />, onSelect: () => onEditMeta(t) }] : []),
+        ...(onDeleteTrack ? [{ label: "Delete track", icon: <TrashIcon size={16} />, danger: true, onSelect: () => onDeleteTrack(t) }] : []),
+      ],
+    ],
+    playlist: { ids: async () => [t.id], defaultName: t.title, onAdded: () => flashRow(FLASH_QUEUE) },
+  });
+
   return (
     <li
       className={`trk${isCurrent ? " playing" : ""}`}
+      onContextMenu={e => openMenuAt(e, menuSpec())}
       style={dragging ? { overflow: "hidden" } : undefined}
       draggable
       onDragStart={e => {
@@ -190,56 +212,12 @@ export function TrackRow({ tracks, i, onPlay, onOpenAlbum, isCurrent, isPlaying,
       </button>
 
       <div className="trk-add">
-        <button className="trk-act" onClick={() => setMenu(m => !m)} aria-label="More actions">⋯</button>
-        {menu && (
-          <>
-            <div className="trk-menu-backdrop" onClick={() => setMenu(false)} />
-            <ul className="trk-menu">
-              {onRate && (
-                <li className="trk-menu-rating"><span>Rate</span><Stars value={rating ?? 0} size={16} onRate={(n) => onRate(t.id, n)} /></li>
-              )}
-              <li><button onClick={() => { player.startRadio(t); setMenu(false); }}>Start radio</button></li>
-              <li><button onClick={() => { actNext(); setMenu(false); }}>Play next</button></li>
-              <li><button onClick={() => { actQueue(); setMenu(false); }}>Add to queue</button></li>
-              {(onEditMeta || onDeleteTrack) && <li className="trk-menu-sep" aria-hidden="true" />}
-              {onEditMeta && <li><button onClick={() => { onEditMeta(t); setMenu(false); }}>Fix metadata</button></li>}
-              {onDeleteTrack && <li><button className="danger" onClick={() => { onDeleteTrack(t); setMenu(false); }}>Delete track</button></li>}
-              <li className="trk-menu-sep" aria-hidden="true" />
-              <li className="trk-menu-head">Add to playlist</li>
-              {playlists.length === 0 && <li className="trk-menu-empty">No playlists yet</li>}
-              {playlists.map(pl => (
-                <li key={pl.id}><button onClick={() => { actPlaylist(pl.id, pl.name); setMenu(false); }}>{pl.name}</button></li>
-              ))}
-            </ul>
-          </>
-        )}
+        <button className="trk-act" onClick={e => openMenuFrom(e.currentTarget, menuSpec())} aria-label="More actions">⋯</button>
       </div>
 
-      {/* Mobile-only overflow menu collapsing favorite + add-to-playlist into one tap. */}
+      {/* Phone layout: the heart is hidden there, the menu has it. */}
       <div className="trk-more">
-        <button className="trk-act" onClick={() => setMore(m => !m)} aria-label="More actions">⋯</button>
-        {more && (
-          <>
-            <div className="trk-menu-backdrop" onClick={() => setMore(false)} />
-            <ul className="trk-menu">
-              {onRate && (
-                <li className="trk-menu-rating"><span>Rate</span><Stars value={rating ?? 0} size={18} onRate={(n) => onRate(t.id, n)} /></li>
-              )}
-              <li><button onClick={() => { player.startRadio(t); setMore(false); }}>Start radio</button></li>
-              <li><button onClick={() => { actNext(); setMore(false); }}>Play next</button></li>
-              <li><button onClick={() => { actQueue(); setMore(false); }}>Add to queue</button></li>
-              <li><button onClick={() => { actFav(); setMore(false); }}>{isFav ? "Remove from Favorites" : "Add to Favorites"}</button></li>
-              {onEditMeta && <li><button onClick={() => { onEditMeta(t); setMore(false); }}>Fix metadata</button></li>}
-              {onDeleteTrack && <li><button className="danger" onClick={() => { onDeleteTrack(t); setMore(false); }}>Delete track</button></li>}
-              <li className="trk-menu-sep" aria-hidden="true" />
-              <li className="trk-menu-head">Add to playlist</li>
-              {playlists.length === 0 && <li className="trk-menu-empty">No playlists yet</li>}
-              {playlists.map(pl => (
-                <li key={pl.id}><button onClick={() => { actPlaylist(pl.id, pl.name); setMore(false); }}>{pl.name}</button></li>
-              ))}
-            </ul>
-          </>
-        )}
+        <button className="trk-act" onClick={e => openMenuFrom(e.currentTarget, menuSpec())} aria-label="More actions">⋯</button>
       </div>
 
       <span className="dur">{fmt(t.duration)}</span>

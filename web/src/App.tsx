@@ -23,6 +23,7 @@ import { AdaptiveTheme } from "./ui/AdaptiveTheme";
 import { NightcoreOverlay } from "./ui/NightcoreOverlay";
 import { NetBadge } from "./ui/NetBadge";
 import { UpdatePrompt } from "./ui/desktopUpdate";
+import { ContextMenuHost, PLAYLISTS_CHANGED } from "./ui/ContextMenu";
 const DebugPanel = lazy(() => import("./ui/DebugPanel").then(m => ({ default: m.DebugPanel })));
 import { dlog } from "./ui/debugLog";
 import { startNotificationPolling } from "./ui/notifications";
@@ -135,6 +136,10 @@ export default function App() {
   // Playlists live at the app level so the sidebar can list them as drop targets.
   // Refreshed on login, on entering the playlists view, and after any mutation.
   const refreshPlaylists = () => api.getPlaylists().then(setPlaylists).catch(() => {});
+  useEffect(() => {
+    window.addEventListener(PLAYLISTS_CHANGED, refreshPlaylists);
+    return () => window.removeEventListener(PLAYLISTS_CHANGED, refreshPlaylists);
+  }, []);
 
   // Keep-alive views. Hooks must stay above the early returns below.
   const [viewGen, setViewGen] = useState(0); // bumped on a mutation to remount with fresh data
@@ -476,6 +481,7 @@ export default function App() {
             (--nav-h/--pb-h/--float-gap/--nav-bottom), which are scoped to .shell. */}
         <Toaster />
         <UpdatePrompt />
+        <ContextMenuHost />
       </div>
       {expanded && <NowPlaying onClose={closePlayer} onOpenArtist={openArtistFromPlayer} onOpenAlbum={openAlbumFromPlayer} />}
       <NetBadge />

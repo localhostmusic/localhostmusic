@@ -2,7 +2,8 @@ import { useLibraryRevision } from "../library/useLibraryRevision";
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { usePlayer, type Track } from "../player/PlayerProvider";
-import { PlayIcon } from "../ui/icons";
+import { PlayIcon, NextIcon, QueueIcon, RadioIcon, AlbumIcon, TrashIcon } from "../ui/icons";
+import { openMenuAt, openMenuFrom, type MenuSpec } from "../ui/ContextMenu";
 import { Stars } from "../ui/Stars";
 import { PlaylistCover } from "./PlaylistCover";
 import { PlaylistEditModal } from "./PlaylistEditModal";
@@ -38,7 +39,6 @@ export function PlaylistPage({ playlistId, onBack, onOpenAlbum }: {
   const [confirmDel, setConfirmDel] = useState(false);
   const [coverVer, setCoverVer] = useState(0);
   const [ratings, setRatings] = useState<Record<number, number>>({});
-  const [openMenu, setOpenMenu] = useState<number | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const player = usePlayer();
   const dragIdx = useRef<number | null>(null);
@@ -60,6 +60,22 @@ export function PlaylistPage({ playlistId, onBack, onOpenAlbum }: {
   const smart = !!pl.smart; // rule-driven: no manual reorder / remove
   const total = tracks.reduce((s, t) => s + (t.duration || 0), 0);
   const queue = () => tracks.map(t => ({ ...t })) as Track[];
+
+  const rowMenu = (t: Track, i: number): MenuSpec => ({
+    header: { title: t.title, sub: t.artist, albumId: t.albumId },
+    rating: { value: ratings[t.id] ?? 0, onRate: n => rate(t.id, n) },
+    sections: [
+      [
+        { label: "Play", icon: <PlayIcon size={16} />, onSelect: () => player.playNow(queue(), i) },
+        { label: "Play next", icon: <NextIcon size={16} />, onSelect: () => player.playNext(t) },
+        { label: "Add to queue", icon: <QueueIcon size={16} />, onSelect: () => player.addToQueue(t) },
+        { label: "Start radio", icon: <RadioIcon size={16} />, onSelect: () => player.startRadio(t) },
+      ],
+      t.albumId != null ? [{ label: "Go to album", icon: <AlbumIcon size={16} />, onSelect: () => onOpenAlbum(t.albumId!) }] : [],
+      smart ? [] : [{ label: "Remove from playlist", icon: <TrashIcon size={16} />, danger: true, onSelect: () => remove(t.id) }],
+    ],
+    playlist: { ids: async () => [t.id], defaultName: t.title },
+  });
 
   async function remove(trackId: number) {
     await api.removeFromPlaylist(playlistId, trackId);
@@ -123,6 +139,7 @@ export function PlaylistPage({ playlistId, onBack, onOpenAlbum }: {
             onDragLeave={() => setDragOver(d => (d === i ? null : d))}
             onDrop={() => !smart && onDrop(i)}
             onDoubleClick={() => player.playNow(queue(), i)}
+            onContextMenu={e => openMenuAt(e, rowMenu(t, i))}
           >
             {smart ? <span className="drag-handle drag-handle-off" aria-hidden="true" /> : <span className="drag-handle" title="Drag to reorder">⠿</span>}
             <button className="row-play" onClick={() => player.playNow(queue(), i)} aria-label={`Play ${t.title}`}>
@@ -141,20 +158,7 @@ export function PlaylistPage({ playlistId, onBack, onOpenAlbum }: {
               <Stars value={ratings[t.id] ?? 0} onRate={n => rate(t.id, n)} />
             </span>
             <div className="pl-actions">
-              <button className="trk-act" onClick={() => setOpenMenu(m => (m === i ? null : i))} aria-label="More actions">⋯</button>
-              {openMenu === i && (
-                <>
-                  <div className="trk-menu-backdrop" onClick={() => setOpenMenu(null)} />
-                  <ul className="trk-menu">
-                    <li className="trk-menu-rating"><span>Rate</span><Stars value={ratings[t.id] ?? 0} size={18} onRate={n => rate(t.id, n)} /></li>
-                    <li><button onClick={() => { player.startRadio(t); setOpenMenu(null); }}>Start radio</button></li>
-                    <li><button onClick={() => { player.playNext(t); setOpenMenu(null); }}>Play next</button></li>
-                    <li><button onClick={() => { player.addToQueue(t); setOpenMenu(null); }}>Add to queue</button></li>
-                    {!smart && <li className="trk-menu-sep" aria-hidden="true" />}
-                    {!smart && <li><button className="danger" onClick={() => { remove(t.id); setOpenMenu(null); }}>Remove from playlist</button></li>}
-                  </ul>
-                </>
-              )}
+              <button className="trk-act" onClick={e => openMenuFrom(e.currentTarget, rowMenu(t, i))} aria-label="More actions">⋯</button>
             </div>
             <span className="dur">{fmt(t.duration)}</span>
           </li>
