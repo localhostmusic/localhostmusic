@@ -325,12 +325,14 @@ export function NowPlaying({ onClose, onOpenArtist, onOpenAlbum }: {
   const cover = cur.albumId != null ? api.coverUrl(cur.albumId) : (cur.artUrl ?? null);
 
   const pickTab = (k: Exclude<Tab, null>) => setTab(prev => (prev === k ? null : k)); // narrow only
-  const cycleVizStyle = () => setVizIdx(i => {
-    const n = i + 1;
+  // back: one step the other way (right-click).
+  const cycleVizStyle = (back = false) => setVizIdx(i => {
+    const n = i + (back ? VIZ_STYLES.length - 1 : 1);
     try { localStorage.setItem("lhm.vizStyle", VIZ_STYLES[n % VIZ_STYLES.length]); } catch { /* */ }
     return n;
   });
   const onVizBtn = () => { if (vizActive) cycleVizStyle(); else pickTab("visualizer"); }; // narrow only
+  const prevVizStyle = (e: React.MouseEvent) => { e.preventDefault(); cycleVizStyle(true); };
 
   // Radio has no cover, so show a glyph placeholder.
   const radioArt = (
@@ -602,7 +604,8 @@ export function NowPlaying({ onClose, onOpenArtist, onOpenAlbum }: {
                   {k === "viz" && (
                     <div className={`np-side-viz${vizStyle === "trip" ? " np-viz-trip" : ""}`}>
                       {vizInner}
-                      <button className="np-viz-style" onClick={cycleVizStyle} title="Change visualizer style">
+                      <button className="np-viz-style" onClick={() => cycleVizStyle()} onContextMenu={prevVizStyle}
+                        title="Click for the next style, right-click for the previous one">
                         {vizStyle}
                       </button>
                     </div>
@@ -668,8 +671,9 @@ export function NowPlaying({ onClose, onOpenArtist, onOpenAlbum }: {
               )}
               {!isMobile && (
                 <button className={vizActive ? "active" : ""} onClick={onVizBtn}
+                  onContextMenu={e => { if (vizActive) prevVizStyle(e); }}
                   aria-label={vizActive ? "Change visualizer style" : "Show visualizer"}
-                  title={vizActive ? `Style: ${vizStyle}` : "Visualizer"}>
+                  title={vizActive ? `Style: ${vizStyle} (right-click for the previous one)` : "Visualizer"}>
                   <VizIcon size={22} />
                 </button>
               )}
