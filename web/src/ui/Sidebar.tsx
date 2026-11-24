@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MusicIcon, PlaylistIcon, BookIcon, PodcastIcon, GearIcon, HeartIcon, CompassIcon, LogoMark } from "./icons";
 import { MyAvatar } from "./MyAvatar";
 import { NotificationsBell } from "./NotificationsBell";
+import { AppVersion } from "./desktopUpdate";
 
 export type ViewName = "home" | "artists" | "albums" | "audiobooks" | "radio" | "podcasts" | "album" | "search" | "discover" | "genres" | "genre" | "playlists" | "favorites" | "stats" | "downloads" | "requests" | "lyrics" | "settings" | "account";
 
@@ -155,6 +156,7 @@ export function Sidebar({ current, onNavigate, isAdmin, username, onLogout, play
           <span className="sidebar-account-gear"><GearIcon size={16} /></span>
         </button>
         <button className="link-btn sidebar-signout" onClick={onLogout}>Sign out</button>
+        <AppVersion />
       </div>
     </aside>
   );

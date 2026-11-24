@@ -18,6 +18,7 @@ interface Bridge {
   state(): Promise<UpdateState>;
   download(): Promise<void>;
   install(): Promise<void>;
+  check(): Promise<void>;
   onChange(cb: (s: UpdateState) => void): () => void;
 }
 
@@ -94,6 +95,17 @@ export function UpdatePrompt() {
       )}
       <Actions s={s} onLater={() => setHidden(s.status)} />
     </div>
+  );
+}
+
+// The desktop app's version, clickable to check for updates. Nothing in a browser.
+export function AppVersion() {
+  const s = useDesktopUpdate();
+  if (!bridge || !s.current) return null;
+  return (
+    <button className="link-btn app-version" onClick={() => bridge.check()} title="Check for updates">
+      Version {s.current}
+    </button>
   );
 }
 

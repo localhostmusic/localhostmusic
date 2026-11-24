@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld("lhmDesktop", {
     state: () => ipcRenderer.invoke("update:state"),
     download: () => ipcRenderer.invoke("update:download"),
     install: () => ipcRenderer.invoke("update:install"),
+    check: () => ipcRenderer.invoke("update:check"),
     onChange: (cb) => {
       const handler = (_event, state) => cb(state);
       ipcRenderer.on("update:changed", handler);

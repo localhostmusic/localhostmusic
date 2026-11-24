@@ -336,6 +336,7 @@ function registerIpc() {
   });
   ipcMain.handle("update:download", (event) => { if (fromApp(event)) downloadUpdate(); });
   ipcMain.handle("update:install", (event) => { if (fromApp(event)) installUpdate(); });
+  ipcMain.handle("update:check", (event) => { if (fromApp(event)) checkForUpdates(); });
 
   ipcMain.handle("setup:state", (event) => {
     if (!fromWelcome(event)) return {};
