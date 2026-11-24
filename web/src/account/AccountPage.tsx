@@ -8,7 +8,8 @@ import { MyAvatar, bumpAvatar } from "../ui/MyAvatar";
 import { ScrobbleSettings } from "./ScrobbleSettings";
 import { SubsonicSettings } from "./SubsonicSettings";
 import { api } from "../api";
-import { AppUpdateSettings, inDesktopApp } from "../ui/desktopUpdate";
+import { AppUpdateSettings, inDesktopApp, builtIn } from "../ui/desktopUpdate";
+import { PasswordSettings } from "./PasswordSettings";
 
 type Storage = {
   totalSize: number; tracks: number; albums: number; artists: number;
@@ -191,6 +192,13 @@ export function AccountPage({ username, isAdmin, onNavigate, onLogout }: {
         <h2 className="account-section-title">Scrobbling</h2>
         <ScrobbleSettings />
       </div>
+
+      {!builtIn && (
+        <div className="account-section">
+          <h2 className="account-section-title">Password</h2>
+          <PasswordSettings />
+        </div>
+      )}
 
       <div className="account-section">
         <h2 className="account-section-title">Connect apps</h2>

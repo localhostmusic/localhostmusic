@@ -1,6 +1,6 @@
 import { buildApp } from "./app.js";
 import { config } from "./config.js";
-import { ensureAdmin } from "./lib/bootstrap.js";
+import { ensureAdmin, resetAdminPassword } from "./lib/bootstrap.js";
 import { scanAll } from "./lib/libraryScan.js";
 import { pruneEmpty } from "./lib/prune.js";
 import { runPrewarm } from "./lib/prewarm.js";
@@ -23,6 +23,9 @@ if (admin.created && admin.generatedPassword) {
   );
 } else if (admin.created) {
   console.log(`[lhm] Created admin user "${admin.username}" from ADMIN_PASSWORD.`);
+}
+if (process.env.RESET_ADMIN_PASSWORD && !admin.created) {
+  console.log("[lhm] " + await resetAdminPassword(app.db, process.env.ADMIN_USER ?? "admin", process.env.RESET_ADMIN_PASSWORD));
 }
 scanAll(app.db, config.dataDir)
   .then(r => {

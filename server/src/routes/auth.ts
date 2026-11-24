@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { verifyPassword, signToken, tokenHash, verifyToken } from "../lib/auth.js";
+import { verifyPassword, signToken, tokenHash, verifyToken, passwordProblem, setPassword } from "../lib/auth.js";
 import { checkLoginAllowed, recordLoginFailure, recordLoginSuccess } from "../lib/ratelimit.js";
 import { config } from "../config.js";
 
@@ -57,6 +57,30 @@ export async function authRoutes(app: FastifyInstance) {
       app.db.prepare("INSERT OR REPLACE INTO revoked_sessions VALUES(?,?)").run(tokenHash(token), Date.now() + 30 * 86400_000);
     } catch { /* already invalid; still clear the browser cookie */ }
     reply.clearCookie("lhm_session", { path: "/", secure: cookieSecureFor(req), sameSite: "lax" });
+    return { ok: true };
+  });
+
+  // Change your own password. Every other device is signed out; this one gets a
+  // fresh cookie. Wrong guesses count against the sign-in throttle.
+  app.post("/api/auth/password", { preHandler: app.authRequired }, async (req: any, reply: FastifyReply) => {
+    const current = String(req.body?.current ?? ""), next = req.body?.next;
+    const problem = passwordProblem(next);
+    if (problem) return reply.code(400).send({ error: problem });
+
+    const retryAfter = checkLoginAllowed(req.user.username, req.ip);
+    if (retryAfter !== null) {
+      return reply.code(429).header("Retry-After", String(retryAfter))
+        .send({ error: "Too many wrong attempts. Try again shortly.", retryAfter });
+    }
+    const row = app.db.prepare("SELECT password_hash FROM users WHERE id=?").get(req.user.id) as any;
+    if (!row || !(await verifyPassword(row.password_hash, current))) {
+      recordLoginFailure(req.user.username, req.ip);
+      return reply.code(403).send({ error: "Your current password is not right." });
+    }
+    recordLoginSuccess(req.user.username, req.ip);
+
+    const sessionVersion = await setPassword(app.db, req.user.id, next);
+    reply.setCookie("lhm_session", signToken({ ...req.user, sessionVersion }), sessionCookieOptions(req));
     return { ok: true };
   });
 

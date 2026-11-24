@@ -158,6 +158,7 @@ All configuration is via environment variables.
 | `JWT_SECRET` | _(generated + persisted)_ | Signing key for session cookies. Best left unset: Localhost Music mints a strong one on first run and stores it at `DATA_DIR/.jwt-secret`. Refuses to boot on a known placeholder (`change-me`). |
 | `ADMIN_USER` | `admin` | Bootstrap admin username (created on first run). |
 | `ADMIN_PASSWORD` | _(random, logged once)_ | Bootstrap admin password. If unset, a random one is generated and printed to the log on first run. |
+| `RESET_ADMIN_PASSWORD` | _(unset)_ | Recovery for a forgotten admin password. Start once with it set (8 or more characters), sign in, then remove it. |
 | `TRUST_PROXY` | _(off)_ | Set to `1` behind a reverse proxy (Caddy/nginx/Traefik/Cloudflare) to trust `X-Forwarded-For`/`-Proto`: the login throttle then sees the real client IP, and the session cookie gets `Secure` on https. Leave off if directly exposed, or clients could spoof those headers. |
 | `COOKIE_SECURE` | _(auto)_ | Force the session cookie's `Secure` flag on (`1`) or off (`0`). Defaults to following the request scheme. |
 | `PORT` | `8585` | HTTP port. |

@@ -140,6 +140,9 @@ export function AppUpdateSettings() {
   );
 }
 export const inDesktopApp = !!bridge;
+// True when the desktop app is showing its own built-in library. That account is
+// signed in by the app, so signing out or changing its password makes no sense.
+export const builtIn = !!(window as any).lhmDesktop?.builtIn;
 
 // Row at the top of the notifications panel while an update is waiting.
 export function UpdateNotice() {

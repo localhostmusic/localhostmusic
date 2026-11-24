@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { hashPassword } from "../lib/auth.js";
+import { hashPassword, passwordProblem, setPassword } from "../lib/auth.js";
 import { isScanning, scanAll } from "../lib/libraryScan.js";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -361,5 +361,17 @@ export async function adminRoutes(app: FastifyInstance) {
     const id = app.db.prepare("INSERT INTO users(username,password_hash,is_admin) VALUES(?,?,0)")
       .run(username, await hashPassword(password)).lastInsertRowid;
     return { id, username };
+  });
+
+  // Set a new password for someone who forgot theirs. Signs them out everywhere.
+  // Your own password goes through /api/auth/password, which asks for the old one.
+  app.post("/api/admin/users/:id/password", adminOnly, async (req: any, reply: any) => {
+    const id = Number(req.params.id);
+    if (id === req.user.id) return reply.code(400).send({ error: "Change your own password from your account page." });
+    const problem = passwordProblem(req.body?.password);
+    if (problem) return reply.code(400).send({ error: problem });
+    if (!app.db.prepare("SELECT 1 FROM users WHERE id=?").get(id)) return reply.code(404).send({ error: "no such user" });
+    await setPassword(app.db, id, req.body.password);
+    return { ok: true };
   });
 }

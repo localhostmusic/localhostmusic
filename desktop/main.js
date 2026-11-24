@@ -315,6 +315,12 @@ const fromApp = (event) => {
 };
 
 function registerIpc() {
+  ipcMain.on("desktop:built-in", (event) => {
+    let own = false;
+    try { own = !!local && new URL(event.senderFrame.url).origin === new URL(local.base).origin; } catch { /* not ours */ }
+    event.returnValue = own;
+  });
+
   ipcMain.handle("desktop:pick-folder", async (event) => {
     if (!fromApp(event)) return null;
     // Start somewhere sensible. The dialog's own default can be a list of unmounted

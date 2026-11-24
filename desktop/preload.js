@@ -3,6 +3,8 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("lhmDesktop", {
+  // Whether this page is the app's own built-in library. Fixed for the page's life.
+  builtIn: ipcRenderer.sendSync("desktop:built-in"),
   pickFolder: () => ipcRenderer.invoke("desktop:pick-folder"),
   state: () => ipcRenderer.invoke("setup:state"),
   useFolder: (dir) => ipcRenderer.invoke("setup:local", dir),

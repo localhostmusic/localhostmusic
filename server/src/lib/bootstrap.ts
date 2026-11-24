@@ -1,6 +1,6 @@
 import type Database from "better-sqlite3";
 import { randomBytes } from "node:crypto";
-import { hashPassword } from "./auth.js";
+import { hashPassword, passwordProblem, setPassword } from "./auth.js";
 
 export interface AdminBootstrap { created: boolean; username: string; generatedPassword?: string; }
 
@@ -16,4 +16,15 @@ export async function ensureAdmin(
   db.prepare("INSERT INTO users(username,password_hash,is_admin) VALUES(?,?,1)")
     .run(username, await hashPassword(password ?? generated!));
   return { created: true, username, generatedPassword: generated };
+}
+
+// Recovery for a forgotten admin password: RESET_ADMIN_PASSWORD on the next start.
+// Returns what happened, to be logged.
+export async function resetAdminPassword(db: Database.Database, username: string, password: string): Promise<string> {
+  const problem = passwordProblem(password);
+  if (problem) return `RESET_ADMIN_PASSWORD was ignored. ${problem}`;
+  const user = db.prepare("SELECT id FROM users WHERE username = ? COLLATE NOCASE AND is_admin=1").get(username) as any;
+  if (!user) return `RESET_ADMIN_PASSWORD was ignored. There is no admin called "${username}".`;
+  await setPassword(db, user.id, password);
+  return `Reset the password for "${username}". Remove RESET_ADMIN_PASSWORD from the configuration now.`;
 }

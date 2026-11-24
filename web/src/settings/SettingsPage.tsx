@@ -536,8 +536,21 @@ export function SettingsPage() {
   const [scanMsg, setScanMsg] = useState("");
   const [scanErr, setScanErr] = useState("");
 
+  const [resetFor, setResetFor] = useState<number | null>(null);
+  const [resetPass, setResetPass] = useState("");
+  const [me, setMe] = useState("");
+
   const load = () => api.getUsers().then(setUsers).catch(() => {});
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); api.me().then((u: any) => setMe(u.username)).catch(() => {}); }, []);
+
+  async function resetPassword(u: { id: number; username: string }) {
+    setErr(""); setMsg("");
+    try {
+      await api.resetUserPassword(u.id, resetPass);
+      setMsg(`New password set for ${u.username}. They were signed out everywhere.`);
+      setResetFor(null); setResetPass("");
+    } catch (e: any) { setErr(e?.message || "Could not set the password."); }
+  }
 
   async function addUser(e: React.FormEvent) {
     e.preventDefault();
@@ -606,6 +619,16 @@ export function SettingsPage() {
             <li key={u.id}>
               <span>{u.username}</span>
               {u.is_admin ? <span className="badge">admin</span> : null}
+              {resetFor === u.id ? (
+                <form className="user-reset" onSubmit={e => { e.preventDefault(); resetPassword(u); }}>
+                  <input type="password" autoFocus autoComplete="new-password" placeholder="New password (8 or more characters)"
+                    value={resetPass} onChange={e => setResetPass(e.target.value)} />
+                  <button className="btn" type="submit" disabled={resetPass.length < 8}>Set</button>
+                  <button className="btn" type="button" onClick={() => setResetFor(null)}>Cancel</button>
+                </form>
+              ) : u.username !== me && (
+                <button className="btn user-reset-open" onClick={() => { setResetFor(u.id); setResetPass(""); setMsg(""); setErr(""); }}>Reset password</button>
+              )}
             </li>
           ))}
         </ul>

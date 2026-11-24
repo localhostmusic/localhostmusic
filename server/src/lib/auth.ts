@@ -16,6 +16,21 @@ export function authenticate(db: Database.Database, token: string): SessionUser 
   return { id: row.id, username: row.username, isAdmin: !!row.is_admin, sessionVersion: row.session_version };
 }
 
+// Null when acceptable, otherwise what is wrong with it. Applies to passwords
+// people choose in the app, not to the bootstrap admin password.
+export function passwordProblem(pw: unknown): string | null {
+  if (typeof pw !== "string" || pw.length < 8) return "Use at least 8 characters.";
+  if (pw.length > 200) return "That password is too long.";
+  return null;
+}
+
+// New hash and a bumped session version, which signs the user out everywhere.
+export async function setPassword(db: Database.Database, userId: number, pw: string): Promise<number> {
+  db.prepare("UPDATE users SET password_hash=?, session_version=session_version+1 WHERE id=?")
+    .run(await hashPassword(pw), userId);
+  return (db.prepare("SELECT session_version v FROM users WHERE id=?").get(userId) as any).v;
+}
+
 export const hashPassword = (pw: string) => argon2.hash(pw, { type: argon2.argon2id });
 export const verifyPassword = (hash: string, pw: string) => argon2.verify(hash, pw);
 export const signToken = (u: SessionUser) =>

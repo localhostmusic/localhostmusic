@@ -216,6 +216,10 @@ export const api = {
   deletePlaylist: (id: number) => req(`/api/playlists/${id}`, { method: "DELETE" }),
   reorderPlaylist: (id: number, trackIds: number[]) => req(`/api/playlists/${id}/reorder`, { method: "POST", body: JSON.stringify({ trackIds }) }),
   refreshSmartPlaylist: (id: number) => req(`/api/playlists/${id}/refresh`, { method: "POST" }),
+  changePassword: (current: string, next: string) =>
+    req("/api/auth/password", { method: "POST", body: JSON.stringify({ current, next }) }),
+  resetUserPassword: (id: number, password: string) =>
+    req(`/api/admin/users/${id}/password`, { method: "POST", body: JSON.stringify({ password }) }),
   getUsers: () => req("/api/admin/users"),
   createUser: (username: string, password: string) =>
     req("/api/admin/users", { method: "POST", body: JSON.stringify({ username, password }) }),
