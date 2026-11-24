@@ -22,4 +22,5 @@ server/dist
 .gitignore
 **/.DS_Store
 **/*.md
+!THIRD-PARTY-NOTICES.md
 docs
