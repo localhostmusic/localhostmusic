@@ -59,22 +59,28 @@ Accounts
 - Multiple users, created by the admin. No public signup.
 - Users can request missing music and report bad metadata.
 
-## Desktop app
+## Get started
 
-The quickest way to try it. Download the installer for Windows or Linux from the
-[releases page](https://github.com/localhostmusic/localhostmusic/releases), open it,
-and choose your music folder. The app runs its own server in the background, only
-reachable from your computer, and updates itself when a new release is out.
+Full step-by-step guide: **[localhostmusic.github.io/localhostmusic](https://localhostmusic.github.io/localhostmusic/get-started.html)**
 
-If you already run a server, the same app can connect to it instead.
+**On one computer.** No terminal, nothing else to install.
 
-To play the same library on your phone, TV or another computer, turn on
-**Settings, Other devices, Let other devices on my network connect**. The app shows the
-address to enter on the other device, and you add a user for it under Settings, Users.
-This works while the app is open and both devices are on the same network.
+1. Download the installer for Windows or Linux from the
+   [releases page](https://github.com/localhostmusic/localhostmusic/releases/latest) and open it.
+2. Click **Choose your music folder** and pick the folder that holds your music.
+3. Wait for the scan. Albums appear as they are found.
 
-For a library that is always on, or reachable from outside your home, run the server
-(Docker, below).
+The app runs its own server in the background, only reachable from your computer, and
+updates itself when a new release is out.
+
+**On your phone and TV too.** In the app, open **Settings, Other devices** and turn on
+**Let other devices on my network connect**. Add a user under **Settings, Users**, then
+open the address the app shows in a browser on the other device and sign in. This works
+while the app is open and both devices are on the same network.
+
+**An always-on server.** For a library that is available when your computer is off, or
+reachable from outside your home, run the server with Docker (below). The desktop app can
+connect to a server you already run instead of using its own.
 
 ## Apps
 
