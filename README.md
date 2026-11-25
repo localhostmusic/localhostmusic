@@ -3,18 +3,26 @@
 A self-hosted music server with its own web player. Point it at a folder of audio
 files and stream your library to a browser, a phone, a desktop app or a TV.
 
-
-
 https://github.com/user-attachments/assets/8d98ef6e-36f1-4e04-949f-2feac0ac2e4d
 
+<table>
+  <tr>
+    <td width="50%" align="center"><img src="docs/screenshots/desktop-album.webp" alt="Album page"><br><sub>Album page</sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/desktop-now-playing.webp" alt="Player with synced lyrics and a visualizer"><br><sub>Synced lyrics and a visualizer</sub></td>
+  </tr>
+  <tr>
+    <td width="50%" align="center"><img src="docs/screenshots/desktop-lyrics-sync.webp" alt="Editor for timing lyrics to a song"><br><sub>Time your own lyrics to a song</sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/desktop-visualizer.webp" alt="Player with the bars visualizer"><br><sub>Ten visualizer styles</sub></td>
+  </tr>
+</table>
 
-<img src="docs/screenshots/desktop-home.webp" alt="Home on desktop" width="880">
-
-<img src="docs/screenshots/desktop-album.webp" alt="Album page" width="436"> <img src="docs/screenshots/desktop-now-playing.webp" alt="Player with synced lyrics and a visualizer" width="436">
-
-<img src="docs/screenshots/desktop-lyrics-sync.webp" alt="Editor for timing lyrics to a song" width="436"> <img src="docs/screenshots/desktop-visualizer.webp" alt="Player with the bars visualizer" width="436">
-
-<img src="docs/screenshots/phone-home.webp" alt="Home on a phone" width="220"> <img src="docs/screenshots/phone-genres.webp" alt="Genres on a phone" width="220"> <img src="docs/screenshots/phone-now-playing.webp" alt="Player on a phone" width="220">
+<table>
+  <tr>
+    <td width="33%" align="center"><img src="docs/screenshots/phone-home.webp" alt="Home on a phone" width="240"><br><sub>Home on a phone</sub></td>
+    <td width="33%" align="center"><img src="docs/screenshots/phone-genres.webp" alt="Genres on a phone" width="240"><br><sub>Genres</sub></td>
+    <td width="33%" align="center"><img src="docs/screenshots/phone-now-playing.webp" alt="Player on a phone" width="240"><br><sub>Player</sub></td>
+  </tr>
+</table>
 
 Most music servers ship an API and leave the player to third-party clients. Localhost Music is
 the server and the player in one process: one Docker image, SQLite, no other services.
