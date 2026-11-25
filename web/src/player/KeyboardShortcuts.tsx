@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePlayer, usePlayerTime } from "./PlayerProvider";
 import { toast } from "../ui/toast";
+import { toggleMute } from "./MuteButton";
 
 // The list shown by the help panel. Keep it in step with the handler below and
 // with the search shortcuts (CommandPalette, SearchBar, useTypeToSearch).
@@ -45,7 +46,6 @@ export function KeyboardShortcuts({ playerOpen = false }: { playerOpen?: boolean
   const p = usePlayer();
   const t = usePlayerTime();
   const [help, setHelp] = useState(false);
-  const beforeMute = useRef(0.8);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -72,8 +72,7 @@ export function KeyboardShortcuts({ playerOpen = false }: { playerOpen?: boolean
         case "ArrowDown": e.preventDefault(); p.setVolume(Math.max(0, p.volume - 0.05)); break;
         case "m": case "M":
           if (!playerOpen) break;
-          if (p.volume > 0) { beforeMute.current = p.volume; p.setVolume(0); toast("Muted"); }
-          else { p.setVolume(beforeMute.current || 0.8); toast("Unmuted"); }
+          toast(toggleMute(p) ? "Muted" : "Unmuted");
           break;
         case "l": case "L":
           if (playerOpen && p.current) { toast(p.currentFav ? "Removed from Liked Songs" : "Added to Liked Songs", "♥"); p.toggleCurrentFav(); }

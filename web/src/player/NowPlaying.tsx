@@ -21,7 +21,8 @@ const FractureVisualizer = lazy(() => import("./FractureVisualizer").then(m => (
 const SiphonVisualizer = lazy(() => import("./SiphonVisualizer").then(m => ({ default: m.SiphonVisualizer })));
 const SilkVisualizer = lazy(() => import("./SilkVisualizer").then(m => ({ default: m.SilkVisualizer })));
 import { LibraryDrawer } from "./LibraryDrawer";
-import { PlayIcon, PauseIcon, PrevIcon, NextIcon, VolumeIcon, ChevronDownIcon, LyricsIcon, EditIcon, VizIcon, ShuffleIcon, RepeatIcon, RepeatOneIcon, HeartIcon, QueueIcon, Spinner, FullscreenIcon, SearchIcon, RadioIcon } from "../ui/icons";
+import { PlayIcon, PauseIcon, PrevIcon, NextIcon, ChevronDownIcon, LyricsIcon, EditIcon, VizIcon, ShuffleIcon, RepeatIcon, RepeatOneIcon, HeartIcon, QueueIcon, Spinner, FullscreenIcon, SearchIcon, RadioIcon } from "../ui/icons";
+import { MuteButton } from "./MuteButton";
 import { Stars } from "../ui/Stars";
 import { DevicePicker } from "./DevicePicker";
 import { SessionPicker } from "./SessionPicker";
@@ -474,7 +475,7 @@ export function NowPlaying({ onClose, onOpenArtist, onOpenAlbum }: {
   );
   const volumeEl = (
     <div className={`np-volume${!p.isActiveDevice ? " remote" : ""}`}>
-      <VolumeIcon size={18} />
+      <MuteButton size={18} />
       <input className="slider" type="range" min={0} max={1} step={0.01} value={p.volume} style={fill(p.volume * 100)}
         onChange={e => p.setVolume(Number(e.target.value))} aria-label={p.activeDeviceName ? `Volume on ${p.activeDeviceName}` : "Volume"} />
     </div>

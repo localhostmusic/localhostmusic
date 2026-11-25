@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { MuteButton } from "./MuteButton";
 import { usePlayer, usePlayerTime } from "./PlayerProvider";
 import { npDisplay } from "./audiobook";
 import { SpeedControl } from "./SpeedControl";
 import { api } from "../api";
-import { PlayIcon, PauseIcon, PrevIcon, NextIcon, VolumeIcon, ShuffleIcon, RepeatIcon, RepeatOneIcon, LyricsIcon, QueueIcon, MoonIcon, Spinner } from "../ui/icons";
+import { PlayIcon, PauseIcon, PrevIcon, NextIcon, ShuffleIcon, RepeatIcon, RepeatOneIcon, LyricsIcon, QueueIcon, MoonIcon, Spinner } from "../ui/icons";
 import { MarqueeText } from "../ui/MarqueeText";
 import { useSwipe } from "../ui/useSwipe";
 import { DevicePicker } from "./DevicePicker";
@@ -169,7 +170,7 @@ export function PlayBar({ onExpand, rightPanel, onToggleLyrics, onToggleQueue }:
           </button>
         )}
         <SleepButton />
-        <VolumeIcon size={18} />
+        <MuteButton size={18} />
         <input
           className="slider pb-vol"
           type="range" min={0} max={1} step={0.01} value={p.volume}

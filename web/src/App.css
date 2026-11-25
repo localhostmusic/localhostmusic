@@ -3472,3 +3472,8 @@ kbd {
 @media (max-width: 640px) { .shortcuts-grid { grid-template-columns: 1fr; } }
 /* No keyboard on a phone or TV. */
 @media (hover: none) { .account-shortcuts { display: none; } }
+
+/* The speaker icon is a mute button */
+.mute-btn { display: inline-grid; place-items: center; flex-shrink: 0; width: 30px; height: 30px; margin: 0 -6px; padding: 0; border: none; border-radius: 50%; background: none; color: inherit; cursor: pointer; }
+@media (hover: hover) { .mute-btn:hover { color: var(--text); background: var(--bg-hover); } }
+.mute-btn.muted { color: var(--accent); }
