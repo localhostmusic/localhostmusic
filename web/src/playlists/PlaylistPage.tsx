@@ -2,7 +2,7 @@ import { useLibraryRevision } from "../library/useLibraryRevision";
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { usePlayer, type Track } from "../player/PlayerProvider";
-import { PlayIcon, NextIcon, QueueIcon, RadioIcon, AlbumIcon, TrashIcon } from "../ui/icons";
+import { EditIcon, PlayIcon, NextIcon, QueueIcon, RadioIcon, AlbumIcon, TrashIcon } from "../ui/icons";
 import { openMenuAt, openMenuFrom, type MenuSpec } from "../ui/ContextMenu";
 import { useSelection, selectionMenu, selectClick, toggleSelected } from "../ui/selection";
 import { Stars } from "../ui/Stars";
@@ -12,6 +12,7 @@ import { SmartPlaylistModal } from "./SmartPlaylistModal";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { MarqueeText } from "../ui/MarqueeText";
 import { DownloadButton } from "../player/DownloadButton";
+import { PLAYLISTS_CHANGED } from "../ui/ContextMenu";
 import { useProgressive } from "../ui/useProgressive";
 
 function fmt(d?: number) {
@@ -110,16 +111,23 @@ export function PlaylistPage({ playlistId, onBack, onOpenAlbum }: {
     <div className="page">
       <button className="back-btn" onClick={onBack}>‹ Playlists</button>
       <header className="album-head pl-head">
-        <PlaylistCover id={pl.id} hasCover={!!pl.cover_path} albumIds={albumIds} version={coverVer} className="head" />
+        {smart
+          ? <PlaylistCover id={pl.id} hasCover={!!pl.cover_path} albumIds={albumIds} version={coverVer} className="head" />
+          : (
+            <button type="button" className="pl-cover-edit" onClick={() => setEditing(true)} aria-label="Edit playlist and cover" title="Edit playlist and cover">
+              <PlaylistCover id={pl.id} hasCover={!!pl.cover_path} albumIds={albumIds} version={coverVer} className="head" />
+              <span className="pl-cover-edit-hint"><EditIcon size={22} />Edit</span>
+            </button>
+          )}
         <div className="album-head-meta">
           <p className="eyebrow">{smart ? "✦ Smart playlist" : "Playlist"}</p>
           <h1>{pl.name}</h1>
           {pl.dedicated_to && <p className="album-artist">Dedicated to {pl.dedicated_to}</p>}
           {pl.mood && <p className="pl-mood">{pl.mood}</p>}
           <p className="muted">{tracks.length} song{tracks.length === 1 ? "" : "s"}{total ? ` · ${fmt(total)}` : ""}{smart && pl.refreshedAt ? ` · updated ${agoStr(pl.refreshedAt)}` : ""}</p>
-          <div className="artist-admin">
+          <div className="artist-admin head-actions">
             <button className="btn primary" onClick={() => tracks.length && player.playNow(queue(), 0)}>
-              <PlayIcon size={16} /> Play
+              <PlayIcon size={20} /> Play
             </button>
             <DownloadButton kind="playlist" id={pl.id} name={pl.name} tracks={tracks} />
             {smart && <button className="btn" onClick={refreshSmart} disabled={refreshing}>{refreshing ? "Refreshing…" : "Refresh"}</button>}
@@ -182,7 +190,7 @@ export function PlaylistPage({ playlistId, onBack, onOpenAlbum }: {
         : <PlaylistEditModal
             playlist={pl} albumIds={albumIds}
             onClose={() => setEditing(false)}
-            onSaved={() => { setEditing(false); setCoverVer(v => v + 1); load(); }}
+            onSaved={() => { setEditing(false); setCoverVer(v => v + 1); load(); window.dispatchEvent(new Event(PLAYLISTS_CHANGED)); }}
           />
       )}
       {confirmDel && (

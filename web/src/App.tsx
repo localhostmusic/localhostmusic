@@ -406,7 +406,9 @@ export default function App() {
       case "stats": return <StatsPage onOpenArtist={openArtist} onOpenAlbum={openAlbum} onOpenGenre={openGenre} />;
       case "downloads": return <DownloadsPage onOpenAlbum={openAlbum} onOpenPlaylist={(id) => push({ name: "playlist", id })} />;
       case "playlists": return <PlaylistsPage onOpenPlaylist={(id) => push({ name: "playlist", id })} onOpenLiked={() => navigate("favorites")} onAddTrackToPlaylist={addTrackToPlaylist} />;
-      case "playlist": return <PlaylistPage playlistId={v.id} onOpenAlbum={openAlbum} onBack={goBack} />;
+      // "‹ Playlists" means the Playlists page, also when you came from the sidebar.
+      case "playlist": return <PlaylistPage playlistId={v.id} onOpenAlbum={openAlbum}
+        onBack={() => (hist.stack[hist.idx - 1]?.name === "playlists" ? goBack() : navigate("playlists"))} />;
       case "requests": return <RequestsPage />;
       case "lyrics": return <LyricsContribPage onOpenAlbum={openAlbum} />;
       case "settings": return user.isAdmin ? <Suspense fallback={null}><SettingsPage /></Suspense> : null;

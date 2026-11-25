@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { PlaylistCover } from "../playlists/PlaylistCover";
+import { PLAYLISTS_CHANGED } from "./ContextMenu";
 import { MusicIcon, PlaylistIcon, BookIcon, PodcastIcon, GearIcon, HeartIcon, CompassIcon, LogoMark } from "./icons";
 import { MyAvatar } from "./MyAvatar";
 import { NotificationsBell } from "./NotificationsBell";
@@ -15,16 +17,19 @@ interface Props {
   isAdmin: boolean;
   username: string;
   onLogout: () => void;
-  playlists: { id: number; name: string }[];
+  playlists: SidebarPlaylist[];
   currentPlaylistId?: number;
   onOpenPlaylist: (id: number) => void;
   onAddTrackToPlaylist: (playlistId: number, trackId: number) => void;
 }
 
+// What the playlist list gives us: enough to draw each one's cover.
+export interface SidebarPlaylist { id: number; name: string; cover_path?: string | null; artAlbums?: string | null }
+
 // A playlist row in the sidebar: navigates on click, and is a drop target for a
 // track being dragged from a track list.
-function PlaylistNavItem({ pl, active, onOpen, onDropTrack }: {
-  pl: { id: number; name: string }; active: boolean;
+function PlaylistNavItem({ pl, active, version, onOpen, onDropTrack }: {
+  pl: SidebarPlaylist; active: boolean; version: number;
   onOpen: (id: number) => void; onDropTrack: (playlistId: number, trackId: number) => void;
 }) {
   const [over, setOver] = useState(false);
@@ -46,7 +51,10 @@ function PlaylistNavItem({ pl, active, onOpen, onDropTrack }: {
         if (id) onDropTrack(pl.id, id);
       }}
     >
-      <span className="nav-icon nav-pl-dot">♪</span>
+      <PlaylistCover
+        id={pl.id} hasCover={!!pl.cover_path} version={version} className="nav"
+        albumIds={(pl.artAlbums ?? "").split(",").filter(Boolean).map(Number)}
+      />
       <span className="nav-label">{pl.name}</span>
     </button>
   );
@@ -85,6 +93,13 @@ export const navRoot = (v: string): ViewName => {
 };
 
 export function Sidebar({ current, onNavigate, isAdmin, username, onLogout, playlists, currentPlaylistId, onOpenPlaylist, onAddTrackToPlaylist }: Props) {
+  // Bumped whenever a playlist changes, so an edited cover is fetched again.
+  const [coverVersion, setCoverVersion] = useState(0);
+  useEffect(() => {
+    const bump = () => setCoverVersion(v => v + 1);
+    window.addEventListener(PLAYLISTS_CHANGED, bump);
+    return () => window.removeEventListener(PLAYLISTS_CHANGED, bump);
+  }, []);
   const active = navRoot(current);
   return (
     <aside className="sidebar">
@@ -114,7 +129,7 @@ export function Sidebar({ current, onNavigate, isAdmin, username, onLogout, play
             className={`nav-item nav-sub nav-liked${current === "favorites" ? " active" : ""}`}
             onClick={() => onNavigate("favorites")}
           >
-            <span className="nav-icon nav-liked-icon"><HeartIcon size={14} /></span>
+            <span className="nav-icon nav-liked-icon"><HeartIcon size={15} /></span>
             <span className="nav-label">Liked Songs</span>
           </button>
           {playlists.map(pl => (
@@ -122,6 +137,7 @@ export function Sidebar({ current, onNavigate, isAdmin, username, onLogout, play
               key={pl.id}
               pl={pl}
               active={currentPlaylistId === pl.id}
+              version={coverVersion}
               onOpen={onOpenPlaylist}
               onDropTrack={onAddTrackToPlaylist}
             />

@@ -3398,3 +3398,25 @@ body.dragging-track .pl-card .pl-cover { outline: 2px dashed var(--border); outl
 .server-update-how a { color: var(--text); }
 .server-update-cmd { margin: 0 0 4px; padding: 12px 14px; border-radius: var(--radius-sm); background: var(--bg-elev2); border: 1px solid var(--border); overflow-x: auto; font-size: 13.5px; user-select: all; }
 .server-update-switch { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); border-bottom: none; }
+
+/* Sidebar playlists show their cover */
+.pl-cover.nav { width: 26px; height: 26px; aspect-ratio: auto; flex-shrink: 0; border-radius: 6px; box-shadow: none; }
+.pl-cover.nav.placeholder svg { width: 14px; height: 14px; }
+.nav-item.nav-sub { gap: 10px; }
+.nav-liked-icon { width: 26px; height: 26px; border-radius: 6px; background: var(--accent-soft); }
+
+/* Playlist header: the cover is a button that opens the editor */
+.pl-cover-edit { position: relative; flex-shrink: 0; padding: 0; border: none; background: none; border-radius: var(--radius-md); cursor: pointer; color: #fff; }
+.pl-cover-edit-hint {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  border-radius: var(--radius-md); background: rgba(0, 0, 0, 0.55); font-size: 14px; font-weight: 600;
+  opacity: 0; transition: opacity 0.15s;
+}
+@media (hover: hover) { .pl-cover-edit:hover .pl-cover-edit-hint { opacity: 1; } }
+.pl-cover-edit:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.pl-cover-edit:focus-visible .pl-cover-edit-hint { opacity: 1; }
+
+/* Header action rows: every control the same height */
+.head-actions .btn { height: 44px; padding: 0 20px; font-size: 15px; }
+.head-actions .btn.primary { padding: 0 24px 0 20px; }
+.head-actions .dl-icon { width: 44px; height: 44px; }
