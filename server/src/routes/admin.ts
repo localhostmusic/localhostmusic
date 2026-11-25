@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { checkForUpdate, updateInfo } from "../lib/updateCheck.js";
 import { hashPassword, passwordProblem, setPassword } from "../lib/auth.js";
 import { isScanning, scanAll } from "../lib/libraryScan.js";
 import { execFile } from "node:child_process";
@@ -270,7 +271,7 @@ export async function adminRoutes(app: FastifyInstance) {
       if (!Number.isFinite(n) || n < 0) return reply.code(400).send({ error: "streamKbps must be a non-negative number (0 = unlimited)" });
       patch.streamKbps = Math.round(n);
     }
-    for (const k of ["showMissingAlbums", "onlineDiscovery", "onlineArtistMeta", "showUsersOnSignIn"] as const) {
+    for (const k of ["showMissingAlbums", "onlineDiscovery", "onlineArtistMeta", "showUsersOnSignIn", "updateCheck"] as const) {
       if (typeof b[k] === "boolean") (patch as any)[k] = b[k];
     }
     if (b.discoverRefreshHours !== undefined) {
@@ -344,6 +345,10 @@ export async function adminRoutes(app: FastifyInstance) {
     const pruned = pruneEmpty(db);
     return { ok: true, pruned };
   });
+
+  // Whether a newer release exists. The check itself runs daily (lib/updateCheck.ts).
+  app.get("/api/admin/update", adminOnly, async () => updateInfo(app.db));
+  app.post("/api/admin/update/check", adminOnly, async () => checkForUpdate(app.db));
 
   app.get("/api/admin/scan-issues", adminOnly, async () =>
     app.db.prepare("SELECT path,error,at FROM scan_issues ORDER BY at DESC LIMIT 200").all());

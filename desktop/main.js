@@ -115,6 +115,7 @@ async function startLocal() {
       ADMIN_USER: cfg.user,
       ADMIN_PASSWORD: cfg.password,
       COOKIE_SECURE: "0",
+      LHM_UPDATE_CHECK: "0", // the app updates itself, built-in server included
       EXIT_WITH_PID: String(process.pid),
       ...(ffmpeg ? { FFMPEG_PATH: ffmpeg } : {}),
       ...(fs.existsSync(SCANNER) ? { LHM_SCANNER_BIN: SCANNER } : {}),

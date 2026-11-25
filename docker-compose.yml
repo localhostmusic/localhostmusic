@@ -1,6 +1,10 @@
 services:
   localhostmusic:
+    # A ready-made image is published with every release. To build from this folder
+    # instead, run: docker compose up -d --build
+    image: ghcr.io/localhostmusic/localhostmusic:latest
     build: .
+    restart: unless-stopped
     ports: ["8585:8585"]
     environment:
       # No JWT_SECRET here: Localhost Music generates one on first run and stores it in the data

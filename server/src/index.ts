@@ -7,6 +7,7 @@ import { runPrewarm } from "./lib/prewarm.js";
 import { backfillLoudness } from "./lib/loudness.js";
 import { backfillArtColors } from "./lib/artColor.js";
 import { refreshAllChannels } from "./lib/podcast.js";
+import { startUpdateChecks } from "./lib/updateCheck.js";
 
 const app = buildApp();
 const admin = await ensureAdmin(
@@ -41,6 +42,7 @@ scanAll(app.db, config.dataDir)
     setTimeout(() => backfillArtColors(app.db, config.dataDir).catch(() => {}), 10_000);
   })
   .catch(e => console.error("Scan failed", e));
+startUpdateChecks(app.db);
 app.listen({ port: config.port, host: config.host })
   .then(() => console.log(`Localhost Music on ${config.port}`));
 

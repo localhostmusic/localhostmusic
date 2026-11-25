@@ -232,6 +232,8 @@ export const api = {
     req("/api/admin/users", { method: "POST", body: JSON.stringify({ username, password }) }),
   rescan: () => req("/api/admin/rescan", { method: "POST" }),
   getAdminSettings: () => req("/api/admin/settings"),
+  serverUpdate: () => req("/api/admin/update"),
+  checkServerUpdate: () => req("/api/admin/update/check", { method: "POST" }),
   saveAdminSettings: (patch: Record<string, unknown>) =>
     req("/api/admin/settings", { method: "PUT", body: JSON.stringify(patch) }),
   openFolder: (which: "music" | "audiobooks") =>

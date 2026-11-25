@@ -24,6 +24,8 @@ export interface AppSettings {
   // List every username on the sign-in page, for anyone who can reach it. Off by
   // default: only right for a server that is not reachable from the internet.
   showUsersOnSignIn: boolean;
+  // Ask GitHub once a day whether a newer release exists, and tell admins.
+  updateCheck: boolean;
 }
 
 export const settingsDefaults = (): AppSettings => ({
@@ -39,6 +41,7 @@ export const settingsDefaults = (): AppSettings => ({
   onlineArtistMeta: true,
   discoverRefreshHours: 24, // daily
   showUsersOnSignIn: false,
+  updateCheck: true,
 });
 
 const KEYS = Object.keys(settingsDefaults()) as (keyof AppSettings)[];

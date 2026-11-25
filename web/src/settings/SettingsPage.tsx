@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { builtIn, AppUpdateSettings, inDesktopApp } from "../ui/desktopUpdate";
 import { OtherDevices, canShareOnNetwork } from "./OtherDevices";
+import { ServerUpdate } from "./ServerUpdate";
 import { KIND_LABELS } from "../reports/RequestsPage";
 
 function parseAlbumDetail(detail?: string): { year?: number | null; rgid?: string | null } {
@@ -618,6 +619,9 @@ export function SettingsPage() {
       )}
 
       {builtIn && canShareOnNetwork && <OtherDevices userCount={users.length} />}
+
+      {/* The desktop app updates its own built-in server along with itself. */}
+      {!builtIn && <ServerUpdate />}
 
       <section className="card">
         <h2>Library</h2>
