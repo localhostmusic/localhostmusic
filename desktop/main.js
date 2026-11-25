@@ -108,7 +108,8 @@ async function startLocal() {
     env: {
       ...process.env,
       PORT: String(port),
-      HOST: "127.0.0.1",
+      // Loopback only, unless the user chose to let other devices connect.
+      HOST: cfg.lan ? "0.0.0.0" : "127.0.0.1",
       DATA_DIR: dataDir,
       MUSIC_DIR: cfg.musicDir,
       ADMIN_USER: cfg.user,
@@ -173,6 +174,40 @@ function stopLocal() {
   const { child } = local;
   local = null;
   child.kill();
+}
+
+// Stops the library and waits until its port is free again.
+function stopLocalAndWait() {
+  if (!local) return Promise.resolve();
+  const { child } = local;
+  const gone = new Promise((resolve) => child.once("exit", resolve));
+  stopLocal();
+  return Promise.race([gone, new Promise((resolve) => setTimeout(resolve, 5000))]);
+}
+
+// This computer's addresses on the home network, for other devices to type in.
+function lanAddresses() {
+  // Virtual adapters (containers, VPNs, virtual machines) are not how a phone gets here.
+  const virtual = /^(docker|br-|veth|virbr|vEthernet|wg|tun|tap|tailscale|zt|vmnet|vboxnet|VirtualBox|VMware)/i;
+  const out = [];
+  for (const [name, list] of Object.entries(os.networkInterfaces())) {
+    if (virtual.test(name)) continue;
+    for (const a of list || []) {
+      if (a.family !== "IPv4" || a.internal) continue;
+      const [x, y] = a.address.split(".").map(Number);
+      // Private ranges only: 10.x, 172.16-31.x, 192.168.x.
+      if (x === 10 || (x === 172 && y >= 16 && y <= 31) || (x === 192 && y === 168)) out.push(a.address);
+    }
+  }
+  // 192.168.x is what home routers hand out. When there is one, the rest is noise.
+  const home = out.filter((ip) => ip.startsWith("192.168."));
+  return home.length ? home : out;
+}
+
+function networkState() {
+  const cfg = loadConfig();
+  const port = local ? Number(new URL(local.base).port) : cfg.port || DEFAULT_PORT;
+  return { enabled: !!cfg.lan, port, addresses: lanAddresses().map((ip) => `http://${ip}:${port}`) };
 }
 
 // Points the running library at a folder. The server rescans when it changes.
@@ -319,6 +354,22 @@ function registerIpc() {
     let own = false;
     try { own = !!local && new URL(event.senderFrame.url).origin === new URL(local.base).origin; } catch { /* not ours */ }
     event.returnValue = own;
+  });
+
+  // Whether other devices on the network may connect to the built-in library.
+  const fromBuiltIn = (event) => {
+    try { return !!local && new URL(event.senderFrame.url).origin === new URL(local.base).origin; } catch { return false; }
+  };
+  ipcMain.handle("desktop:network", (event) => (fromBuiltIn(event) ? networkState() : null));
+  ipcMain.handle("desktop:network-set", async (event, enabled) => {
+    if (!fromBuiltIn(event)) return null;
+    if (!!loadConfig().lan !== !!enabled) {
+      saveConfig({ lan: !!enabled });
+      // The address the server listens on is fixed when it starts, so start it again.
+      await stopLocalAndWait();
+      await openSource();
+    }
+    return networkState();
   });
 
   ipcMain.handle("desktop:pick-folder", async (event) => {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
-import { AppUpdateSettings, inDesktopApp } from "../ui/desktopUpdate";
+import { builtIn, AppUpdateSettings, inDesktopApp } from "../ui/desktopUpdate";
+import { OtherDevices, canShareOnNetwork } from "./OtherDevices";
 import { KIND_LABELS } from "../reports/RequestsPage";
 
 function parseAlbumDetail(detail?: string): { year?: number | null; rgid?: string | null } {
@@ -615,6 +616,8 @@ export function SettingsPage() {
           <AppUpdateSettings />
         </section>
       )}
+
+      {builtIn && canShareOnNetwork && <OtherDevices userCount={users.length} />}
 
       <section className="card">
         <h2>Library</h2>

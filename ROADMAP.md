@@ -21,8 +21,6 @@ Tested with 100,000 tracks. Known limits:
 - The albums list is one response. It will need paging somewhere past 30k albums.
 
 ## Apps
-- Desktop: a setting to let other devices connect to the built-in server, so a phone
-  or TV can use the library on your PC without setting up Docker.
 - Desktop: signed builds for Windows and a macOS build.
 - Desktop: offer to add the AppImage to the app menu on first run.
 - iOS shell with native audio (needs a Mac to build).

@@ -68,7 +68,13 @@ reachable from your computer, and updates itself when a new release is out.
 
 If you already run a server, the same app can connect to it instead.
 
-To stream to your phone, TV or other computers, run the server (Docker, below).
+To play the same library on your phone, TV or another computer, turn on
+**Settings, Other devices, Let other devices on my network connect**. The app shows the
+address to enter on the other device, and you add a user for it under Settings, Users.
+This works while the app is open and both devices are on the same network.
+
+For a library that is always on, or reachable from outside your home, run the server
+(Docker, below).
 
 ## Apps
 

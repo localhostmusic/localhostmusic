@@ -3382,3 +3382,13 @@ body.dragging-track .pl-card .pl-cover { outline: 2px dashed var(--border); outl
 }
 .signin-list-setting { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
 .device-signin { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); border-bottom: none; }
+
+/* Settings: sharing the desktop app's library on the network */
+.other-devices-switch { border-bottom: none; }
+.other-devices { margin-top: 6px; padding-top: 16px; border-top: 1px solid var(--border); }
+.other-devices-lead { margin: 0 0 10px; }
+.other-devices-list { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; }
+.other-devices-list li { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.other-devices-list code { font-size: 16px; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--bg-elev2); border: 1px solid var(--border); user-select: all; overflow-wrap: anywhere; }
+.other-devices-notes { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.6; }
+.other-devices-notes strong { color: var(--text); }
