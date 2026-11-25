@@ -31,21 +31,29 @@ It also speaks the Subsonic API, so existing Subsonic apps work with it.
 ## Features
 
 Library and playback
-- Scans MP3, FLAC, M4A, OGG, Opus and WAV into SQLite. Rescans are incremental.
+- Scans MP3, FLAC, M4A, OGG, Opus and WAV into SQLite. New files are picked up
+  automatically on a schedule, and rescans are incremental.
 - Browse by artist, album or genre. Full-text search (SQLite FTS5).
 - Gapless playback, crossfade, shuffle, repeat, loudness normalization.
 - Range streaming for instant seeking, optional ffmpeg transcoding with a cache.
 - Playlists, smart playlists, favorites, star ratings.
-- Podcasts, internet radio and audiobooks.
+- Right-click menus on songs and albums, and multi-select with Ctrl, Shift or a checkbox.
+- Song radio (play similar songs) and Auto DJ, which keeps the queue going when it runs out.
+- Podcasts, internet radio and audiobooks, with speed control for spoken word.
 
 Player
 - Full-screen player with synced lyrics (from LRCLIB), visualizers and a waveform.
 - A tap-to-sync tool for writing your own synced lyrics when no database has them.
+- Nightcore and slowed modes: one dial from 0.7x with reverb up to 2x, with its own look.
+- Sleep timer, keyboard shortcuts, and a Ctrl+K search from anywhere.
 - OS media controls and lock-screen controls through the Media Session API.
 
 Devices
 - Installable PWA. Albums and playlists can be downloaded for offline play.
 - Connect: control playback on one device from another, or hand it off.
+- Listen together: start a session and other people on your server hear what you play, in sync.
+- The desktop app can share its library with other devices on your network with one switch.
+- Per-device stream quality, for slow connections.
 - A TV interface at `/tv`, driven by a remote or by your phone.
 
 Metadata
@@ -57,6 +65,8 @@ Metadata
 
 Accounts
 - Multiple users, created by the admin. No public signup.
+- A sign-in page with profile tiles, and an option to skip the password on devices you trust.
+- Admins are told in the app when a new version is out.
 - Users can request missing music and report bad metadata.
 
 ## Get started
