@@ -110,7 +110,6 @@ export function PlaylistPage({ playlistId, onBack, onOpenAlbum }: {
   return (
     <div className="page">
       <button className="back-btn" onClick={onBack}>‹ Playlists</button>
-      <div className="pl-head-card">
       <header className="album-head pl-head">
         {smart
           ? <PlaylistCover id={pl.id} hasCover={!!pl.cover_path} albumIds={albumIds} version={coverVer} className="head" />
@@ -138,11 +137,10 @@ export function PlaylistPage({ playlistId, onBack, onOpenAlbum }: {
         </div>
       </header>
 
-      {/* Below the header, so the header height is set by the cover alone. */}
-      {pl.description && <p className="pl-desc">{pl.description}</p>}
-      </div>
-
       {tracks.length === 0 && <p className="muted">This playlist is empty. Add songs with the + on any track.</p>}
+      {/* One panel: the playlist's note on top, where it reads against a surface, then the songs. */}
+      <div className="track-panel">
+        {pl.description && <p className="pl-desc">{pl.description}</p>}
       <ol className="track-list">
         {visible.map((t, i) => (
           <li
@@ -181,6 +179,7 @@ export function PlaylistPage({ playlistId, onBack, onOpenAlbum }: {
           </li>
         ))}
       </ol>
+      </div>
       {more && <div ref={sentinel} className="grid-sentinel" aria-hidden />}
 
       {editing && (smart

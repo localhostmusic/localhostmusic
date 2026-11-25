@@ -3435,12 +3435,16 @@ body.dragging-track .pl-card .pl-cover { outline: 2px dashed var(--border); outl
 }
 .head-actions .album-more { font-size: 20px; letter-spacing: 1px; line-height: 1; }
 
-/* Playlist header on a card, so the cover, title and note read as one block. */
-.pl-head-card {
-  margin-bottom: 22px; padding: 22px;
-  background: color-mix(in srgb, color-mix(in srgb, var(--accent) 7%, var(--bg-elev)) 58%, transparent);
+/* A track list with something above it (a playlist's note) shares one panel with it. */
+.track-panel {
+  background: color-mix(in srgb, color-mix(in srgb, var(--album-tint, var(--accent)) 7%, var(--bg-elev)) 58%, transparent);
   border: 1px solid var(--glass-border); border-radius: var(--radius-md);
 }
-.pl-head-card .album-head { margin-bottom: 0; }
-.pl-head-card .pl-desc { margin: 20px 0 0; }
-@media (max-width: 720px) { .pl-head-card { padding: 16px; } }
+.track-panel .track-list { background: none; border: none; }
+.track-panel .pl-desc {
+  margin: 0; padding: 16px 20px; max-width: none; border-left: none; border-bottom: 1px solid var(--glass-border);
+  font-size: 15px; line-height: 1.55; color: color-mix(in srgb, var(--text) 86%, transparent);
+}
+/* Nothing to list: no empty panel. */
+.track-list:empty { display: none; }
+.track-panel:not(:has(li)):not(:has(.pl-desc)) { display: none; }
