@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { rememberPicture, setProfilePicture } from "../auth/profiles";
 
 // The current user's profile picture, with a monogram fallback. A shared version
 // (bumped on upload/removal) cache-busts the image URL so every instance updates at once.
@@ -37,7 +38,9 @@ export function MyAvatar({ username, size = 32, className = "" }: {
   const src = `/api/me/avatar?u=${encodeURIComponent(username)}&v=${v}`;
   return (
     <span className={`my-avatar ${className}`} style={{ width: size, height: size }}>
-      {!failed && <img key={src} src={src} alt="" onError={() => setFailed(true)} />}
+      {/* Each load or failure also updates the copy the sign-in tiles use. */}
+      {!failed && <img key={src} src={src} alt="" onLoad={e => rememberPicture(username, e.currentTarget)}
+        onError={() => { setFailed(true); setProfilePicture(username, null); }} />}
       {failed && <span className="my-avatar-i" style={{ fontSize: Math.round(size * 0.42) }}>{initial}</span>}
     </span>
   );

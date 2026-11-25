@@ -4,6 +4,7 @@ import { checkLoginAllowed, recordLoginFailure, recordLoginSuccess } from "../li
 import { config } from "../config.js";
 import { getSettings } from "../lib/settings.js";
 import { createHash, randomBytes } from "node:crypto";
+import { createReadStream, existsSync } from "node:fs";
 
 // Device sign-in ("don't ask for my password on this device").
 const DEVICE_IDLE_MS = 180 * 86400_000; // unused this long, it stops working
@@ -106,6 +107,16 @@ export async function authRoutes(app: FastifyInstance) {
     const token = (req.body as any)?.token;
     if (typeof token === "string" && token) app.db.prepare("DELETE FROM device_logins WHERE token_hash=?").run(deviceHash(token));
     return { ok: true };
+  });
+
+  // Pictures for that picker. Same rule as the names: nothing unless the setting is on.
+  app.get("/api/auth/avatar/:username", async (req: any, reply: FastifyReply) => {
+    if (!getSettings(app.db).showUsersOnSignIn) return reply.code(404).send();
+    const row = app.db.prepare(`SELECT a.path FROM user_avatars a JOIN users u ON u.id = a.user_id
+      WHERE u.username = ? COLLATE NOCASE`).get(String(req.params.username)) as any;
+    if (!row?.path || !existsSync(row.path)) return reply.code(404).send();
+    reply.type("image/jpeg").header("Cache-Control", "no-cache");
+    return createReadStream(row.path);
   });
 
   app.post("/api/auth/logout", async (req: FastifyRequest, reply: FastifyReply) => {

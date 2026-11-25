@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import { Aurora } from "../ui/Aurora";
 import { LogoMark } from "../ui/icons";
-import { deviceToken, forgetProfile, rememberProfile, savedProfiles, setDeviceToken } from "./profiles";
+import { deviceToken, forgetProfile, profilePicture, rememberProfile, savedProfiles, setDeviceToken } from "./profiles";
 
 // Sign-in. People who have signed in on this device before get a tile to click, so
 // they only type a password. The tiles come from this browser's own storage; the
@@ -24,6 +24,7 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
   // This device's profiles first, then any others the server lists.
   const seen = new Set(saved.map(n => n.toLowerCase()));
   const profiles = [...saved, ...listed.filter(n => !seen.has(n.toLowerCase()))];
+  const listedSet = new Set(listed.map(n => n.toLowerCase()));
   const picking = profiles.length > 0 && !picked && !other;
 
   const reset = () => { setP(""); setErr(""); setForgot(false); };
@@ -80,7 +81,7 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
               {profiles.map(name => (
                 <li key={name}>
                   <button type="button" className="profile-tile" disabled={busy} onClick={() => pick(name)}>
-                    <Avatar name={name} />
+                    <Avatar name={name} listed={listedSet.has(name.toLowerCase())} />
                     <span className="profile-name">{name}</span>
                   </button>
                   {seen.has(name.toLowerCase()) && (
@@ -97,7 +98,7 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
           <>
             {picked ? (
               <div className="profile-picked">
-                <Avatar name={picked} />
+                <Avatar name={picked} listed={listedSet.has(picked.toLowerCase())} />
                 <span className="profile-name">{picked}</span>
               </div>
             ) : (
@@ -133,13 +134,18 @@ export function LoginPage({ onLogin }: { onLogin: () => void }) {
   );
 }
 
-// A letter on a colour picked from the name, so each person keeps the same one.
-function Avatar({ name }: { name: string }) {
+// The person's picture when there is one: this device's saved copy, or, for names
+// the server lists, the server's. Otherwise a letter on a colour picked from the
+// name, so each person keeps the same one.
+function Avatar({ name, listed = false }: { name: string; listed?: boolean }) {
+  const [broken, setBroken] = useState(false);
+  const src = profilePicture(name) ?? (listed ? `/api/auth/avatar/${encodeURIComponent(name)}` : null);
   let h = 0;
   for (const ch of name.toLowerCase()) h = (h * 31 + ch.charCodeAt(0)) % 360;
   return (
     <span className="profile-avatar" style={{ background: `linear-gradient(140deg, hsl(${h} 70% 56%), hsl(${(h + 40) % 360} 65% 40%))` }} aria-hidden="true">
       {name.trim().charAt(0).toUpperCase() || "?"}
+      {src && !broken && <img src={src} alt="" onError={() => setBroken(true)} />}
     </span>
   );
 }
