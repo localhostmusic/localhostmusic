@@ -1411,8 +1411,9 @@ body.dragging-track .nav-item.nav-sub {
 /* Every track list sits on a panel, so rows read against one surface instead of
    whatever the page background happens to be behind them. */
 .track-list {
-  background: color-mix(in srgb, var(--album-tint, var(--accent)) 7%, var(--bg-elev));
-  border: 1px solid var(--border);
+  /* Part see-through, so the page's colour still comes through the panel. */
+  background: color-mix(in srgb, color-mix(in srgb, var(--album-tint, var(--accent)) 7%, var(--bg-elev)) 58%, transparent);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   padding: 6px;
 }
@@ -3437,8 +3438,8 @@ body.dragging-track .pl-card .pl-cover { outline: 2px dashed var(--border); outl
 /* Playlist header on a card, so the cover, title and note read as one block. */
 .pl-head-card {
   margin-bottom: 22px; padding: 22px;
-  background: color-mix(in srgb, var(--accent) 7%, var(--bg-elev));
-  border: 1px solid var(--border); border-radius: var(--radius-md);
+  background: color-mix(in srgb, color-mix(in srgb, var(--accent) 7%, var(--bg-elev)) 58%, transparent);
+  border: 1px solid var(--glass-border); border-radius: var(--radius-md);
 }
 .pl-head-card .album-head { margin-bottom: 0; }
 .pl-head-card .pl-desc { margin: 20px 0 0; }
