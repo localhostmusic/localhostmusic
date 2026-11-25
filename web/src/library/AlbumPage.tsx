@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import { AlbumCard } from "./AlbumCard";
 import { usePlayer, type Track } from "../player/PlayerProvider";
-import { PlayIcon, StarIcon, BookIcon } from "../ui/icons";
-import { openMenuFrom } from "../ui/ContextMenu";
+import { PlayIcon, StarIcon } from "../ui/icons";
+import { openMenuAt } from "../ui/ContextMenu";
 import { MetadataModal } from "./MetadataModal";
 import { TrackRow } from "./TrackRow";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
@@ -34,7 +34,6 @@ export function AlbumPage({ albumId, onBack, onOpenArtist, onOpenAlbum, isAdmin 
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [fixing, setFixing] = useState<Track | null>(null);
   const [delTrack, setDelTrack] = useState<Track | null>(null);
-  const [markBook, setMarkBook] = useState(false);    // confirm "mark as audiobook"
   const [tint, setTint] = useState<string | null>(null); // dominant colour of this album's art
   const [moreBy, setMoreBy] = useState<any[]>([]); // the artist's other albums, for the shelf under the songs
   const player = usePlayer();
@@ -145,7 +144,9 @@ export function AlbumPage({ albumId, onBack, onOpenArtist, onOpenAlbum, isAdmin 
         <img className="album-backdrop" src={api.coverUrl(album.id, 160)} alt="" aria-hidden />
       </div>
       {onBack && <button className="back-btn" onClick={onBack}>‹ Back</button>}
-      <header className="album-head">
+      {/* Right-click the header for the album's menu, the same one its card has. */}
+      <header className="album-head"
+        onContextMenu={e => openMenuAt(e, { album: { id: album.id, title: album.title, artist: album.artist ?? undefined }, onAudiobook: onBack })}>
         <img
           className="album-head-cover"
           src={api.coverUrl(album.id)}
@@ -179,12 +180,6 @@ export function AlbumPage({ albumId, onBack, onOpenArtist, onOpenAlbum, isAdmin 
               <StarIcon size={16} filled={starredAlbums.has(album.id)} />
             </button>
             <DownloadButton kind="album" id={album.id} name={album.title} tracks={queue} />
-            {isAdmin && (
-              <div className="album-menu-wrap">
-                <button className="btn album-more" aria-label="More actions" title="More actions"
-                  onClick={e => openMenuFrom(e.currentTarget, { sections: [[{ label: "Mark as audiobook", icon: <BookIcon size={16} />, onSelect: () => setMarkBook(true) }]] })}>⋯</button>
-              </div>
-            )}
           </div>
         </div>
       </header>
@@ -229,16 +224,6 @@ export function AlbumPage({ albumId, onBack, onOpenArtist, onOpenAlbum, isAdmin 
           confirmLabel="Delete from disk"
           onConfirm={() => performDelete(delTrack)}
           onCancel={() => setDelTrack(null)}
-        />
-      )}
-      {markBook && album && (
-        <ConfirmDialog
-          title="Mark as audiobook?"
-          message="This album moves to the Audiobooks section (chapter-style playback, resume, no lyrics/radio). You can undo it any time from the audiobook's page."
-          confirmLabel="Mark as audiobook"
-          danger={false}
-          onConfirm={async () => { setMarkBook(false); try { await api.setAlbumAudiobook(album.id, true); onBack?.(); } catch { alert("Couldn't update."); } }}
-          onCancel={() => setMarkBook(false)}
         />
       )}
     </div>

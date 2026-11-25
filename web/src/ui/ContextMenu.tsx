@@ -4,7 +4,8 @@ import { api } from "../api";
 import { usePlayer } from "../player/PlayerProvider";
 import { Stars } from "./Stars";
 import { toast } from "./toast";
-import { AlbumIcon, ChevronDownIcon, NextIcon, PlayIcon, PlaylistIcon, QueueIcon, RadioIcon } from "./icons";
+import { AlbumIcon, BookIcon, ChevronDownIcon, NextIcon, PlayIcon, PlaylistIcon, QueueIcon, RadioIcon } from "./icons";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 // One menu for the whole app: right-click on a song or album, and the "more" button
 // on a row. Callers describe what to show; <ContextMenuHost> (mounted once) draws it.
@@ -26,7 +27,12 @@ export interface MenuSpec {
   startAt?: "playlists";
 }
 
-type Target = MenuSpec | { album: { id: number; title: string; artist?: string }; onOpen?: (id: number) => void };
+type Target = MenuSpec | {
+  album: { id: number; title: string; artist?: string };
+  onOpen?: (id: number) => void;
+  // Called after an admin moves the album to Audiobooks (the album page leaves itself).
+  onAudiobook?: () => void;
+};
 type Place = { x: number; y: number } | DOMRect;
 
 let show: ((place: Place, target: Target) => void) | null = null;
@@ -48,7 +54,7 @@ export function openMenuFrom(el: Element, target: Target) {
 
 export const PLAYLISTS_CHANGED = "lhm-playlists-changed";
 
-export function ContextMenuHost() {
+export function ContextMenuHost({ isAdmin = false }: { isAdmin?: boolean }) {
   const player = usePlayer();
   const [open, setOpen] = useState<{ place: Place; spec: MenuSpec } | null>(null);
   const [step, setStep] = useState<"main" | "playlists">("main");
@@ -56,6 +62,8 @@ export function ContextMenuHost() {
   const [naming, setNaming] = useState<string | null>(null);
   const [rated, setRated] = useState(0);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+  // Album waiting for the "mark as audiobook" confirmation.
+  const [toBook, setToBook] = useState<{ id: number; title: string; done?: () => void } | null>(null);
   const panel = useRef<HTMLDivElement>(null);
 
   const close = () => setOpen(null);
@@ -66,7 +74,7 @@ export function ContextMenuHost() {
 
   useEffect(() => {
     show = (place, target) => {
-      const spec = "album" in target ? albumSpec(target.album, target.onOpen) : target;
+      const spec = "album" in target ? albumSpec(target.album, target.onOpen, target.onAudiobook) : target;
       setNaming(null); setPlaylists(null); setPos(null);
       if (spec.startAt === "playlists") loadPlaylists(); else setStep("main");
       setRated(spec.rating?.value ?? 0);
@@ -76,7 +84,7 @@ export function ContextMenuHost() {
   });
 
   // An album's actions need its track list, fetched when one is chosen.
-  function albumSpec(album: { id: number; title: string; artist?: string }, onOpen?: (id: number) => void): MenuSpec {
+  function albumSpec(album: { id: number; title: string; artist?: string }, onOpen?: (id: number) => void, onAudiobook?: () => void): MenuSpec {
     const tracks = () => api.getAlbum(album.id).then((a: any) => (a.tracks ?? []) as any[]);
     const withTracks = (fn: (t: any[]) => void) => () => { tracks().then(t => { if (t.length) fn(t); }).catch(() => toast("Could not load that album")); };
     return {
@@ -89,6 +97,8 @@ export function ContextMenuHost() {
           { label: "Start radio", icon: <RadioIcon size={16} />, onSelect: withTracks(t => player.startRadio(t[0])) },
         ],
         onOpen ? [{ label: "Go to album", icon: <AlbumIcon size={16} />, onSelect: () => onOpen(album.id) }] : [],
+        // For audiobooks kept inside the music folder. A separate audiobooks folder does this by itself.
+        isAdmin ? [{ label: "Mark as audiobook", icon: <BookIcon size={16} />, onSelect: () => setToBook({ id: album.id, title: album.title, done: onAudiobook }) }] : [],
       ],
       playlist: { ids: () => tracks().then(t => t.map(x => x.id)), defaultName: album.title },
     };
@@ -129,7 +139,23 @@ export function ContextMenuHost() {
     setPos({ left: Math.max(m, left), top: Math.max(m, top) });
   }, [open, step, playlists, naming]);
 
-  if (!open) return null;
+  const confirmBook = toBook && (
+    <ConfirmDialog
+      title="Mark as audiobook?"
+      message={`"${toBook.title}" moves to the Audiobooks section (chapter-style playback, resume, no lyrics or radio). You can undo it any time from the audiobook's page.`}
+      confirmLabel="Mark as audiobook"
+      danger={false}
+      onConfirm={async () => {
+        const book = toBook;
+        setToBook(null);
+        try { await api.setAlbumAudiobook(book.id, true); toast("Moved to Audiobooks"); book.done?.(); }
+        catch { toast("Could not update that album"); }
+      }}
+      onCancel={() => setToBook(null)}
+    />
+  );
+
+  if (!open) return confirmBook || null;
   const { spec } = open;
   const pl = spec.playlist;
 
@@ -159,6 +185,8 @@ export function ContextMenuHost() {
   const sections = spec.sections.filter(s => s.length);
 
   return createPortal(
+    <>
+    {confirmBook}
     <div
       className="ctx-menu" ref={panel} role="menu"
       style={{ left: pos?.left ?? 0, top: pos?.top ?? 0, visibility: pos ? "visible" : "hidden" }}
@@ -232,7 +260,8 @@ export function ContextMenuHost() {
           </div>
         </>
       )}
-    </div>,
+    </div>
+    </>,
     document.body,
   );
 }

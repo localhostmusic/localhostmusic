@@ -486,7 +486,7 @@ export default function App() {
             (--nav-h/--pb-h/--float-gap/--nav-bottom), which are scoped to .shell. */}
         <Toaster />
         <UpdatePrompt />
-        <ContextMenuHost />
+        <ContextMenuHost isAdmin={user.isAdmin} />
         <SelectionBar />
       </div>
       {expanded && <NowPlaying onClose={closePlayer} onOpenArtist={openArtistFromPlayer} onOpenAlbum={openAlbumFromPlayer} />}
