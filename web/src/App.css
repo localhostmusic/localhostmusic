@@ -3448,3 +3448,8 @@ body.dragging-track .pl-card .pl-cover { outline: 2px dashed var(--border); outl
 /* Nothing to list: no empty panel. */
 .track-list:empty { display: none; }
 .track-panel:not(:has(li)):not(:has(.pl-desc)) { display: none; }
+
+/* Library scanning controls */
+.auto-scan { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 14px; }
+.auto-scan select { padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev2); color: var(--text); font: inherit; }
+.library-rescan-note { margin: 0 0 4px; font-size: 14px; }

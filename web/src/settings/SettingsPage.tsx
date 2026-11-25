@@ -528,6 +528,24 @@ function EnrichmentSettings() {
   );
 }
 
+// How often the server looks for new and removed files by itself.
+function AutoScanSetting() {
+  const [minutes, setMinutes] = useState<number | null>(null);
+  useEffect(() => { api.getAdminSettings().then((s: any) => setMinutes(Number(s.autoScanMinutes ?? 15))).catch(() => {}); }, []);
+  if (minutes === null) return null;
+  const options = [[0, "Never"], [15, "Every 15 minutes"], [60, "Every hour"], [360, "Every 6 hours"], [1440, "Once a day"]] as const;
+  const save = (n: number) => { const before = minutes; setMinutes(n); api.saveAdminSettings({ autoScanMinutes: n }).catch(() => setMinutes(before)); };
+  return (
+    <label className="auto-scan">
+      <span>Check for new music automatically</span>
+      <select value={options.some(o => o[0] === minutes) ? minutes : "other"} onChange={e => save(Number(e.target.value))}>
+        {!options.some(o => o[0] === minutes) && <option value="other" disabled>Every {minutes} minutes</option>}
+        {options.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+      </select>
+    </label>
+  );
+}
+
 // Off by default: it hands every username to anyone who can open the sign-in page.
 function SignInListSetting() {
   const [on, setOn] = useState<boolean | null>(null);
@@ -625,10 +643,11 @@ export function SettingsPage() {
 
       <section className="card">
         <h2>Library</h2>
-        <p className="muted">Re-scan your music folder to pick up newly added files.</p>
+        <p className="muted">New and removed files are picked up automatically. Rescan to do it right now.</p>
         <button className="btn" onClick={rescan} disabled={scanning}>
           {scanning ? "Scanning…" : "Rescan library"}
         </button>
+        <AutoScanSetting />
         {scanMsg && <p className="ok-msg">{scanMsg}</p>}
         {scanErr && <p className="err">{scanErr}</p>}
       </section>

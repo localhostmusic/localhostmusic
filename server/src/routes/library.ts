@@ -12,6 +12,7 @@ import { albumColors } from "../lib/artColor.js";
 import { recordPlay } from "../lib/plays.js";
 import { enqueueArtistImage, backfillArtistImages } from "../lib/artistImage.js";
 import { getSettings } from "../lib/settings.js";
+import { isScanning, lastScanAt, scanAndTidy, USER_RESCAN_GAP_MS } from "../lib/libraryScan.js";
 import { safeFetch, BlockedUrlError } from "../lib/ssrf.js";
 import { similarTracks, autoDJPool } from "../lib/similar.js";
 import { isAlbumArtist, APPEARS_ON_ALBUMS, creditsForTracks, groupCredits } from "../lib/credits.js";
@@ -21,6 +22,21 @@ import { isAlbumArtist, APPEARS_ON_ALBUMS, creditsForTracks, groupCredits } from
 export const albumLossless = "COALESCE((SELECT MIN(" + "(LOWER(path) LIKE '%.flac' OR LOWER(path) LIKE '%.wav' OR LOWER(path) LIKE '%.aiff' OR LOWER(path) LIKE '%.aif' OR LOWER(path) LIKE '%.ape' OR LOWER(path) LIKE '%.wv')" + ") FROM tracks WHERE tracks.album_id = al.id), 0) AS lossless";
 export async function libraryRoutes(app: FastifyInstance) {
   const guard = { preHandler: app.authRequired };
+
+  // Any user can ask for a rescan (they may know music was just added). It runs in
+  // the background, and not again within a few minutes of the last one.
+  app.get("/api/library/scan", guard, async () => ({ scanning: isScanning(), lastScanAt: lastScanAt() || null }));
+  app.post("/api/library/rescan", guard, async (_req, reply) => {
+    if (isScanning()) return { started: false, scanning: true };
+    const wait = USER_RESCAN_GAP_MS - (Date.now() - lastScanAt());
+    if (lastScanAt() && wait > 0) {
+      const retryAfter = Math.ceil(wait / 1000);
+      return reply.code(429).header("Retry-After", String(retryAfter))
+        .send({ error: "The library was scanned a moment ago.", retryAfter });
+    }
+    scanAndTidy(app.db, config.dataDir).catch(e => console.error("Requested scan failed", e));
+    return { started: true, scanning: true };
+  });
 
   // Library size + disk usage for the storage panel on the Account page.
   app.get("/api/library/storage", guard, async () => {

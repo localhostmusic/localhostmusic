@@ -66,7 +66,7 @@
       <p>If the admin password itself is lost, start the server once with <code>RESET_ADMIN_PASSWORD</code> set to a new password of 8 or more characters, sign in, then remove that setting.</p>
 
       <h2 id="library">Your library</h2>
-      <p>The app reads your files where they are and never moves them. It picks up new files on the next scan, which runs when the server starts, or on demand from <strong>Settings, Library, Rescan library</strong>.</p>
+      <p>The app reads your files where they are and never moves them. It checks for new and removed files by itself every 15 minutes; admins can change how often under <strong>Settings, Library</strong>. If you just added something and don't want to wait, anyone can press <strong>Check for new music</strong> on the Account page.</p>
       <p>Albums and artists come from the tags inside the files. If something is filed under the wrong artist or album, the tags are the place to look. Admins can fix tags from the app, which writes the change back to the file.</p>
       <p>FLAC, MP3, AAC, Ogg, Opus and other common formats play as they are. For slower connections, each device can ask for a smaller converted stream under <strong>Account, Quality</strong>.</p>
 
@@ -115,7 +115,7 @@ docker compose up -d</code></pre>
       <h3>My phone or TV can't reach the app on my computer</h3>
       <p>Check that <strong>Let other devices on my network connect</strong> is on, the app is open, and both devices are on the same network. On Windows, allow the app through the firewall when asked. The address can change when your router restarts; the app always shows the current one.</p>
       <h3>Songs are missing</h3>
-      <p>Run <strong>Rescan library</strong> in Settings. Files the scanner could not read are listed under <strong>Settings, Library health</strong> with the reason.</p>
+      <p>Press <strong>Check for new music</strong> on the Account page, or <strong>Rescan library</strong> in Settings. Files the scanner could not read are listed under <strong>Settings, Library health</strong> with the reason.</p>
       <h3>The desktop app says the library stopped</h3>
       <p>The message includes the last lines of its log. The full log is <code>server.log</code> in the app's data folder, listed under <a href="#backup">Backups</a>.</p>
       <h3>Something else</h3>

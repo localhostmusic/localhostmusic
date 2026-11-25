@@ -11,6 +11,7 @@ import { api } from "../api";
 import { AppUpdateSettings, inDesktopApp, builtIn } from "../ui/desktopUpdate";
 import { PasswordSettings } from "./PasswordSettings";
 import { DeviceSignIn } from "./DeviceSignIn";
+import { LibraryRescan } from "./LibraryRescan";
 
 type Storage = {
   totalSize: number; tracks: number; albums: number; artists: number;
@@ -192,6 +193,11 @@ export function AccountPage({ username, isAdmin, onNavigate, onLogout }: {
       <div className="account-section">
         <h2 className="account-section-title">Scrobbling</h2>
         <ScrobbleSettings />
+      </div>
+
+      <div className="account-section">
+        <h2 className="account-section-title">Library</h2>
+        <LibraryRescan />
       </div>
 
       {!builtIn && (

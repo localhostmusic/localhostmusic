@@ -1,7 +1,7 @@
 import { buildApp } from "./app.js";
 import { config } from "./config.js";
 import { ensureAdmin, resetAdminPassword } from "./lib/bootstrap.js";
-import { scanAll } from "./lib/libraryScan.js";
+import { scanAll, startAutoScan } from "./lib/libraryScan.js";
 import { pruneEmpty } from "./lib/prune.js";
 import { runPrewarm } from "./lib/prewarm.js";
 import { backfillLoudness } from "./lib/loudness.js";
@@ -43,6 +43,8 @@ scanAll(app.db, config.dataDir)
   })
   .catch(e => console.error("Scan failed", e));
 startUpdateChecks(app.db);
+// New tracks from an automatic scan get the same follow-up as a manual one.
+startAutoScan(app.db, config.dataDir, () => { void runPrewarm(app.db); void backfillLoudness(app.db).catch(() => {}); });
 app.listen({ port: config.port, host: config.host })
   .then(() => console.log(`Localhost Music on ${config.port}`));
 

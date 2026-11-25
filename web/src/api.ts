@@ -231,6 +231,9 @@ export const api = {
   createUser: (username: string, password: string) =>
     req("/api/admin/users", { method: "POST", body: JSON.stringify({ username, password }) }),
   rescan: () => req("/api/admin/rescan", { method: "POST" }),
+  // For every user: ask for a background scan, and see whether one is running.
+  requestRescan: (): Promise<{ started: boolean; scanning: boolean }> => req("/api/library/rescan", { method: "POST" }),
+  scanStatus: (): Promise<{ scanning: boolean; lastScanAt: number | null }> => req("/api/library/scan"),
   getAdminSettings: () => req("/api/admin/settings"),
   serverUpdate: () => req("/api/admin/update"),
   checkServerUpdate: () => req("/api/admin/update/check", { method: "POST" }),

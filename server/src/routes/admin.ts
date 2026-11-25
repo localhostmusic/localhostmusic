@@ -274,6 +274,11 @@ export async function adminRoutes(app: FastifyInstance) {
     for (const k of ["showMissingAlbums", "onlineDiscovery", "onlineArtistMeta", "showUsersOnSignIn", "updateCheck"] as const) {
       if (typeof b[k] === "boolean") (patch as any)[k] = b[k];
     }
+    if (b.autoScanMinutes !== undefined) {
+      const n = Number(b.autoScanMinutes);
+      if (!Number.isFinite(n) || n < 0) return reply.code(400).send({ error: "autoScanMinutes must be 0 or more (0 = off)" });
+      patch.autoScanMinutes = Math.round(n) > 0 ? Math.max(5, Math.round(n)) : 0; // at most every 5 minutes
+    }
     if (b.discoverRefreshHours !== undefined) {
       const n = Number(b.discoverRefreshHours);
       if (!Number.isFinite(n) || n < 0) return reply.code(400).send({ error: "discoverRefreshHours must be ≥ 0 (0 = manual)" });

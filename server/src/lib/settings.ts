@@ -26,6 +26,8 @@ export interface AppSettings {
   showUsersOnSignIn: boolean;
   // Ask GitHub once a day whether a newer release exists, and tell admins.
   updateCheck: boolean;
+  // Look for new and removed files every this many minutes (0 = only on demand).
+  autoScanMinutes: number;
 }
 
 export const settingsDefaults = (): AppSettings => ({
@@ -42,6 +44,7 @@ export const settingsDefaults = (): AppSettings => ({
   discoverRefreshHours: 24, // daily
   showUsersOnSignIn: false,
   updateCheck: true,
+  autoScanMinutes: 15,
 });
 
 const KEYS = Object.keys(settingsDefaults()) as (keyof AppSettings)[];
