@@ -110,6 +110,7 @@ export function PlaylistPage({ playlistId, onBack, onOpenAlbum }: {
   return (
     <div className="page">
       <button className="back-btn" onClick={onBack}>‹ Playlists</button>
+      <div className="pl-head-card">
       <header className="album-head pl-head">
         {smart
           ? <PlaylistCover id={pl.id} hasCover={!!pl.cover_path} albumIds={albumIds} version={coverVer} className="head" />
@@ -139,6 +140,7 @@ export function PlaylistPage({ playlistId, onBack, onOpenAlbum }: {
 
       {/* Below the header, so the header height is set by the cover alone. */}
       {pl.description && <p className="pl-desc">{pl.description}</p>}
+      </div>
 
       {tracks.length === 0 && <p className="muted">This playlist is empty. Add songs with the + on any track.</p>}
       <ol className="track-list">

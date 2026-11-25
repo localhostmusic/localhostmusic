@@ -165,7 +165,7 @@ export function AlbumPage({ albumId, onBack, onOpenArtist, onOpenAlbum, isAdmin 
           </p>
           <div className="head-actions">
             <button className="btn primary play-all" onClick={() => queue.length && player.playNow(queue, 0)}>
-              <PlayIcon size={16} /> Play
+              <PlayIcon size={20} /> Play
             </button>
             <button className="btn" onClick={() => queue.length && player.startRadio(queue[0])} title="Play similar songs">
               Radio
