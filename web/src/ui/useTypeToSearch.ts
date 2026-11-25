@@ -13,7 +13,7 @@ export function useTypeToSearch(query: string, onQuery: (q: string) => void, dis
     const onKey = (e: KeyboardEvent) => {
       if (fine && !fine.matches) return;
       if (e.defaultPrevented || e.isComposing || e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key.length !== 1 || e.key === " " || e.key === "/") return;
+      if (e.key.length !== 1 || e.key === " " || e.key === "/" || e.key === "?") return; // "?" opens the shortcuts list
       const el = document.activeElement as HTMLElement | null;
       if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT" || el.isContentEditable)) return;
       if (document.querySelector(".syncl, .modal-backdrop, [role=dialog]")) return;

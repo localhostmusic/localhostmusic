@@ -423,7 +423,7 @@ export default function App() {
       <AdaptiveTheme />
       <NightcoreOverlay />
       <MediaSession />
-      <KeyboardShortcuts />
+      <KeyboardShortcuts playerOpen={expanded} />
       <CommandPalette
         isAdmin={user.isAdmin} disabled={expanded}
         onNavigate={navigate} onOpenAlbum={openAlbum} onOpenArtist={openArtist}

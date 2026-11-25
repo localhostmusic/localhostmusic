@@ -3453,3 +3453,22 @@ body.dragging-track .pl-card .pl-cover { outline: 2px dashed var(--border); outl
 .auto-scan { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 14px; }
 .auto-scan select { padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev2); color: var(--text); font: inherit; }
 .library-rescan-note { margin: 0 0 4px; font-size: 14px; }
+
+/* Keyboard shortcuts panel */
+.modal.shortcuts { width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 80px); overflow-y: auto; }
+.shortcuts-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 36px; margin-top: 16px; }
+.shortcuts-grid h3 { margin: 14px 0 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+.shortcuts-grid dl { margin: 0; }
+.shortcuts-grid dl > div { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.shortcuts-grid dl > div:last-child { border-bottom: none; }
+.shortcuts-grid dt { display: flex; align-items: center; gap: 4px; flex-shrink: 0; order: 2; }
+.shortcuts-grid dt i { margin: 0 4px 0 0; font-style: normal; color: var(--muted); font-size: 12px; }
+.shortcuts-grid dd { margin: 0; font-size: 14px; color: var(--text); }
+kbd {
+  display: inline-block; min-width: 26px; padding: 3px 7px; border-radius: 6px; text-align: center;
+  background: var(--bg-elev2); border: 1px solid var(--border); border-bottom-width: 2px;
+  font: 600 12px/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--text);
+}
+@media (max-width: 640px) { .shortcuts-grid { grid-template-columns: 1fr; } }
+/* No keyboard on a phone or TV. */
+@media (hover: none) { .account-shortcuts { display: none; } }

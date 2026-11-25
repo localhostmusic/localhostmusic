@@ -12,6 +12,7 @@ import { AppUpdateSettings, inDesktopApp, builtIn } from "../ui/desktopUpdate";
 import { PasswordSettings } from "./PasswordSettings";
 import { DeviceSignIn } from "./DeviceSignIn";
 import { LibraryRescan } from "./LibraryRescan";
+import { openShortcuts } from "../player/KeyboardShortcuts";
 
 type Storage = {
   totalSize: number; tracks: number; albums: number; artists: number;
@@ -198,6 +199,12 @@ export function AccountPage({ username, isAdmin, onNavigate, onLogout }: {
       <div className="account-section">
         <h2 className="account-section-title">Library</h2>
         <LibraryRescan />
+      </div>
+
+      <div className="account-section account-shortcuts">
+        <h2 className="account-section-title">Keyboard shortcuts</h2>
+        <p className="muted library-rescan-note">Play, skip, search and more without the mouse. Press <kbd>?</kbd> anywhere to see the list.</p>
+        <div className="update-actions"><button className="btn" onClick={openShortcuts}>Show keyboard shortcuts</button></div>
       </div>
 
       {!builtIn && (
