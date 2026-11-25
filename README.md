@@ -3,6 +3,11 @@
 A self-hosted music server with its own web player. Point it at a folder of audio
 files and stream your library to a browser, a phone, a desktop app or a TV.
 
+
+
+https://github.com/user-attachments/assets/8d98ef6e-36f1-4e04-949f-2feac0ac2e4d
+
+
 <img src="docs/screenshots/desktop-home.webp" alt="Home on desktop" width="880">
 
 <img src="docs/screenshots/desktop-album.webp" alt="Album page" width="436"> <img src="docs/screenshots/desktop-now-playing.webp" alt="Player with synced lyrics and a visualizer" width="436">
