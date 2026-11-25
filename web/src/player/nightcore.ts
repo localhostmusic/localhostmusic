@@ -16,8 +16,8 @@ export function nightcoreSupported(): boolean {
 }
 
 export const VIBE_MIN = 0.7;
-// 1.5 is osu!'s Nightcore mod rate.
-export const VIBE_MAX = 1.5;
+// Up to double speed. osu!'s Nightcore mod rate, 1.5, is one of the snap presets.
+export const VIBE_MAX = 2;
 // Dial position when the mode is first switched on.
 export const VIBE_DEFAULT = 1.25;
 

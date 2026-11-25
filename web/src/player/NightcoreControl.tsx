@@ -27,8 +27,8 @@ export function NightcoreControl({ className }: { className?: string }) {
             aria-label="Vibe: slowed to nightcore"
           />
           <button
-            className="nc-rate" onClick={() => p.setVibe(p.vibe < 1 ? 0.8 : p.vibe === 1.25 ? 1.5 : 1.25)}
-            title="Snap presets: classic 1.25× ↔ osu! 1.5× (slowed: 0.8×)" aria-label="Snap vibe preset"
+            className="nc-rate" onClick={() => p.setVibe(p.vibe < 1 ? 0.8 : p.vibe === 1.25 ? 1.5 : p.vibe === 1.5 ? 2 : 1.25)}
+            title="Snap presets: classic 1.25×, osu! 1.5×, double 2× (slowed: 0.8×)" aria-label="Snap vibe preset"
           >{p.vibe.toFixed(2)}×</button>
         </>
       )}
