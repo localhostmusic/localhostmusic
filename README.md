@@ -97,13 +97,14 @@ The Android and TV apps ask for your server's address on first run.
 
 ## Quick start (Docker)
 
-1. Put your music in `./music` (or edit the volume in `docker-compose.yml`).
-2. Optionally set `ADMIN_PASSWORD` in `docker-compose.yml` (otherwise one is generated).
-3. Build and run:
+1. Download [`docker-compose.yml`](docker-compose.yml) into an empty folder.
+2. Put your music in `./music` next to it (or edit the volume in the file).
+3. Optionally set `ADMIN_PASSWORD` in the file (otherwise one is generated).
+4. Start it. This downloads the ready-made image, for amd64 and arm64:
    ```bash
-   docker compose up --build
+   docker compose up -d
    ```
-4. Open <http://localhost:8585> and sign in as `admin` / your `ADMIN_PASSWORD`.
+5. Open <http://localhost:8585> and sign in as `admin` / your `ADMIN_PASSWORD`.
    (Leave `ADMIN_PASSWORD` unset and Localhost Music generates a random one and prints it to the
    log on first run: `docker compose logs localhostmusic`.)
 
@@ -164,10 +165,19 @@ docker compose start localhostmusic
 Upgrade. Back up first, then:
 
 ```bash
-git pull
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 docker compose logs -f localhostmusic     # migrations run automatically on startup
 ```
+
+The server checks GitHub once a day for a newer release and tells admins in the app, with
+the changes, under **Settings, Server**. It never updates itself. Turn the check off there
+if you prefer. For hands-off updates, a tool such as
+[Watchtower](https://containrrr.dev/watchtower/) can pull new images and restart the
+container for you.
+
+If you build the image yourself instead of using the published one:
+`git pull && docker compose up -d --build`.
 
 Database migrations are forward-only. Once a newer Localhost Music has opened your database,
 an older build refuses to start on it rather than risk corrupting it. To roll back,
@@ -250,6 +260,7 @@ connecting an account.
 
 | Service | Used for |
 | ------- | -------- |
+| [GitHub](https://github.com/localhostmusic/localhostmusic/releases) | Daily check for a newer release (admin setting) |
 | [Last.fm](https://www.last.fm/api) | Scrobbling, artist bios and tags, similar artists |
 | [ListenBrainz](https://listenbrainz.org) | Scrobbling, listening stats |
 | [LRCLIB](https://lrclib.net) | Synced lyrics |

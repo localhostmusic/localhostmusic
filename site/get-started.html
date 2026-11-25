@@ -76,19 +76,22 @@
       <p>Choose this if you want the library available when your computer is off, or reachable from outside your home. You run the server on a machine that stays on, and every device connects to it, including the desktop app.</p>
 
       <h3 id="docker">With Docker</h3>
-      <p>You need <a href="https://docs.docker.com/get-docker/">Docker</a> and the project's files.</p>
-      <pre><code>git clone https://github.com/localhostmusic/localhostmusic.git
-cd localhostmusic</code></pre>
+      <p>You need <a href="https://docs.docker.com/get-docker/">Docker</a>. A ready-made image is published with every release, for regular PCs and for ARM machines such as a Raspberry Pi.</p>
       <ol class="steps">
+        <li>Make a folder for it and download the setup file into it:
+          <pre><code>mkdir localhostmusic && cd localhostmusic
+curl -O https://raw.githubusercontent.com/localhostmusic/localhostmusic/main/docker-compose.yml</code></pre>
+        </li>
         <li>Open <code>docker-compose.yml</code> and change <code>./music</code> to the folder that holds your music.</li>
         <li>Start it:
-          <pre><code>docker compose up -d --build</code></pre>
+          <pre><code>docker compose up -d</code></pre>
         </li>
         <li>Get the admin password, which is created and shown once on the first start:
           <pre><code>docker compose logs localhostmusic</code></pre>
         </li>
         <li>Open <code>http://localhost:8585</code> on that machine, or <code>http://its-address:8585</code> from another device, and sign in as <code>admin</code>.</li>
       </ol>
+      <p>The server starts again by itself after a reboot.</p>
 
       <h3 id="without-docker">Without Docker</h3>
       <p>You need <a href="https://nodejs.org">Node.js 24</a> or newer and <a href="https://ffmpeg.org/download.html">FFmpeg</a>. These steps are for Linux and macOS. On Windows, the desktop app with <a href="#other-devices">sharing turned on</a> is the simpler route.</p>

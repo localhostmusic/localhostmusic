@@ -84,10 +84,12 @@
 
       <h2 id="updates">Updates</h2>
       <p>The desktop app checks for a new version when it opens and offers it in a card with the list of changes. You can also check under <strong>Settings, Desktop app</strong>. See the <a href="changelog.html">changelog</a> for what each version changed.</p>
-      <p>For a server, pull the new code and rebuild:</p>
-      <pre><code>git pull
-docker compose up -d --build</code></pre>
-      <p>Your library and accounts are kept. The database updates itself on the first start of a new version.</p>
+      <p>A server tells its admins when a newer version is out: a notification in the bell, and the list of changes under <strong>Settings, Server</strong>. It checks GitHub once a day and never installs anything by itself. You can turn the check off in the same place.</p>
+      <p>To update a Docker server, run this in the folder with your <code>docker-compose.yml</code>:</p>
+      <pre><code>docker compose pull
+docker compose up -d</code></pre>
+      <p>It takes about a minute. Your library and accounts are kept, and the database updates itself on the first start of a new version. Phones, TVs and browsers need nothing: they load the player from the server.</p>
+      <p>For hands-off updates, <a href="https://containrrr.dev/watchtower/">Watchtower</a> can pull new images and restart the container for you. Without Docker, run <code>git pull</code> and repeat the build steps from <a href="get-started.html#without-docker">Get started</a>.</p>
 
       <h2 id="backup">Backups</h2>
       <p>Your music files are never changed unless you edit tags, so back them up however you already do. Everything else, including accounts, playlists, ratings and history, lives in one data folder:</p>
