@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Localhost Music: a player for the music you own</title>
+<meta name="description" content="A music player for your own files. Open it, pick your music folder, and listen. Free and open source, for Windows and Linux.">
+<meta property="og:title" content="Localhost Music: a player for the music you own">
+<meta property="og:description" content="A music player for your own files. Open it, pick your music folder, and listen. Free and open source, for Windows and Linux.">
+<meta property="og:image" content="https://localhostmusic.github.io/localhostmusic/social-preview.png">
+<meta name="theme-color" content="#0a0a0c">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="./"><img src="logo.svg" alt=""><b>localhost<span>music</span></b></a>
+    <nav class="nav" aria-label="Main">
+      <a href="get-started.html">Get started</a>
+      <a href="docs.html">Docs</a>
+      <a href="changelog.html">Changelog</a>
+      <a href="https://github.com/localhostmusic/localhostmusic">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="hero">
+  <div class="wrap">
+    <h1>A player for the music you own.</h1>
+    <p class="lead">Open the app, choose the folder where your music lives, and listen. No account, no subscription, and nothing is uploaded anywhere.</p>
+    <div class="btn-row">
+      <a class="btn primary" href="https://github.com/localhostmusic/localhostmusic/releases/latest" data-download="auto"><span><b>Download</b><small data-meta>Windows and Linux</small></span></a>
+      <a class="btn" href="get-started.html">How to set it up</a>
+    </div>
+    <p class="note" data-os-note>Free and open source. Also runs as a server for your phone and TV. <a href="get-started.html#downloads">All downloads</a></p>
+    <div class="shot">
+      <video src="demo.mp4" poster="demo-poster.webp" controls muted playsinline preload="none" aria-label="A one minute tour of the app"></video>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="wrap">
+    <h2>Three ways to use it</h2>
+    <p class="sub">Start with the first one. You can move to the others later without losing anything.</p>
+    <div class="paths">
+      <a class="path" href="get-started.html#one-computer">
+        <span class="tag easy">Easiest</span>
+        <h3>On one computer</h3>
+        <p>Install the app and point it at your music folder. That is the whole setup.</p>
+        <span class="go">Install the app</span>
+      </a>
+      <a class="path" href="get-started.html#other-devices">
+        <span class="tag">One switch</span>
+        <h3>On your phone and TV too</h3>
+        <p>Turn on one setting in the app and your other devices can play the same library while your computer is on.</p>
+        <span class="go">Share from the app</span>
+      </a>
+      <a class="path" href="get-started.html#server">
+        <span class="tag">For tinkerers</span>
+        <h3>An always-on server</h3>
+        <p>Run it on a home server or a spare computer, with Docker or without, and reach it from anywhere you set up.</p>
+        <span class="go">Run the server</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="wrap">
+    <h2>What it does</h2>
+    <p class="sub">The player and the server are one program, so everything below works the same on every device.</p>
+    <div class="features">
+      <div><h3>Plays without gaps</h3><p>Albums run track to track with no silence between them, or crossfade if you prefer. Volume is evened out across songs.</p></div>
+      <div><h3>Lyrics that follow along</h3><p>Synced lyrics are fetched when they exist. When they don't, you can time your own by tapping along to the song.</p></div>
+      <div><h3>Visualizers</h3><p>Ten styles that react to the music and take their colours from the album cover.</p></div>
+      <div><h3>Playlists and ratings</h3><p>Right-click a song or album to add it to a playlist. Select several at once. Rate and favourite as you go.</p></div>
+      <div><h3>More than music</h3><p>Podcasts, internet radio and audiobooks live in the same app, each with its own section.</p></div>
+      <div><h3>Works with other apps</h3><p>The server speaks the Subsonic API, so existing Subsonic apps on your phone can connect to it.</p></div>
+    </div>
+    <div class="gallery">
+      <figure><img src="screenshots/desktop-now-playing.webp" alt="The player with lyrics and a visualizer beside the album cover" loading="lazy" width="1440" height="900"><figcaption>Lyrics and a visualizer beside the cover</figcaption></figure>
+      <figure><img src="screenshots/desktop-lyrics-sync.webp" alt="The editor for timing lyrics, with a list of lines and a waveform" loading="lazy" width="1440" height="900"><figcaption>Timing your own lyrics</figcaption></figure>
+      <figure><img src="screenshots/desktop-album.webp" alt="An album page with its track list" loading="lazy" width="1440" height="900"><figcaption>An album page</figcaption></figure>
+      <figure><img src="screenshots/desktop-visualizer.webp" alt="The player with the bars visualizer" loading="lazy" width="1440" height="900"><figcaption>One of ten visualizer styles</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="wrap">
+    <h2>Yours, and it stays that way</h2>
+    <p class="sub">Your library never leaves your devices. The app only goes online for things you can switch off, such as lyrics and artist photos. It is free, with no paid tier, and the source is public.</p>
+    <div class="btn-row">
+      <a class="btn primary" href="https://github.com/localhostmusic/localhostmusic/releases/latest" data-download="auto"><span><b>Download</b><small data-meta>Windows and Linux</small></span></a>
+      <a class="btn" href="https://github.com/localhostmusic/localhostmusic">See the source</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>Localhost Music is free and open source, under the GNU AGPL v3.</span>
+    <span><a href="https://github.com/localhostmusic/localhostmusic">Source</a> · <a href="https://github.com/localhostmusic/localhostmusic/issues">Report a problem</a> · <a href="https://github.com/localhostmusic/localhostmusic/blob/main/THIRD-PARTY-NOTICES.md">Credits</a></span>
+  </div>
+</footer>
+<script src="site.js" defer></script>
+</body>
+</html>

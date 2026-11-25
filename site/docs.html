@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Localhost Music documentation</title>
+<meta name="description" content="Accounts, sign-in, phones and TVs, backups, updates and troubleshooting for Localhost Music.">
+<meta property="og:title" content="Localhost Music documentation">
+<meta property="og:description" content="Accounts, sign-in, phones and TVs, backups, updates and troubleshooting for Localhost Music.">
+<meta property="og:image" content="https://localhostmusic.github.io/localhostmusic/social-preview.png">
+<meta name="theme-color" content="#0a0a0c">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="./"><img src="logo.svg" alt=""><b>localhost<span>music</span></b></a>
+    <nav class="nav" aria-label="Main">
+      <a href="get-started.html">Get started</a>
+      <a href="docs.html" aria-current="page">Docs</a>
+      <a href="changelog.html">Changelog</a>
+      <a href="https://github.com/localhostmusic/localhostmusic">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+<div class="wrap">
+  <h1>Docs</h1>
+  <p class="sub">How the parts you will actually touch work. For installing, see <a href="get-started.html">Get started</a>.</p>
+  <div class="layout">
+    <nav class="toc" aria-label="On this page">
+      <a href="#accounts">Accounts</a>
+      <a href="#sign-in">Signing in</a>
+      <a href="#passwords">Passwords</a>
+      <a href="#library">Your library</a>
+      <a href="#lyrics">Lyrics</a>
+      <a href="#phone">Phones</a>
+      <a href="#tv">TVs</a>
+      <a href="#updates">Updates</a>
+      <a href="#backup">Backups</a>
+      <a href="#internet">Outside your home</a>
+      <a href="#trouble">Troubleshooting</a>
+    </nav>
+    <div class="prose">
+
+      <h2 id="accounts">Accounts</h2>
+      <p>Each person gets their own account, with their own playlists, ratings, favourites and listening history. The music itself is shared.</p>
+      <p>The first account is the admin. Admins add people under <strong>Settings, Users</strong>. The desktop app used on one computer has a single account and signs you in by itself.</p>
+
+      <h2 id="sign-in">Signing in</h2>
+      <p>A sign-in lasts 30 days on a device. Closing the app or the tab does not sign you out; only the <strong>Sign out</strong> button does.</p>
+      <ul>
+        <li><strong>Profile tiles.</strong> After you sign in once on a device, the sign-in page shows a tile with your name and picture. Click it and type only your password.</li>
+        <li><strong>No password on a trusted device.</strong> Tick <strong>Don't ask for my password on this device</strong> when you sign in, or turn it on under <strong>Account, Password</strong>. Your tile then opens your account directly. Anyone using that device can do the same, so keep it for devices you trust.</li>
+        <li><strong>Everyone listed.</strong> An admin can turn on <strong>Show all users on the sign-in page</strong> under Settings, Users, so people can pick their name on a new device. Leave it off if the server can be reached from the internet.</li>
+      </ul>
+
+      <h2 id="passwords">Passwords</h2>
+      <p>Change yours under <strong>Account, Password</strong>. It signs your other devices out.</p>
+      <p>There is no email reset, because passwords live only on your server. If someone forgets theirs, an admin sets a new one under <strong>Settings, Users, Reset password</strong>, and the person changes it after signing in.</p>
+      <p>If the admin password itself is lost, start the server once with <code>RESET_ADMIN_PASSWORD</code> set to a new password of 8 or more characters, sign in, then remove that setting.</p>
+
+      <h2 id="library">Your library</h2>
+      <p>The app reads your files where they are and never moves them. It picks up new files on the next scan, which runs when the server starts, or on demand from <strong>Settings, Library, Rescan library</strong>.</p>
+      <p>Albums and artists come from the tags inside the files. If something is filed under the wrong artist or album, the tags are the place to look. Admins can fix tags from the app, which writes the change back to the file.</p>
+      <p>FLAC, MP3, AAC, Ogg, Opus and other common formats play as they are. For slower connections, each device can ask for a smaller converted stream under <strong>Account, Quality</strong>.</p>
+
+      <h2 id="lyrics">Lyrics</h2>
+      <p>Open the player and turn on the <strong>Lyrics</strong> panel. Synced lyrics come from <a href="https://lrclib.net">LRCLIB</a> when it has them.</p>
+      <p>To time lyrics yourself, click the pencil in the player with the Lyrics panel open. Paste the words, one line each, press play, and tap as each line starts. You can nudge a line afterwards, and share the result back to LRCLIB if you like.</p>
+
+      <h2 id="phone">Phones</h2>
+      <p>Open your server's address in the phone's browser and sign in. Then use <strong>Add to Home Screen</strong> (Share menu on iPhone, the browser menu on Android) to get an app icon that opens full screen.</p>
+      <p>Playback continues with the screen locked, with controls on the lock screen. Songs you download in the app stay available without a connection.</p>
+
+      <h2 id="tv">TVs</h2>
+      <p>Any TV with a browser can open your server's address followed by <code>/tv</code>, for example <code>http://192.168.1.20:8585/tv</code>. That page is built for a remote control.</p>
+      <p>For Android TV there is a small app that wraps that page so the remote's arrows work properly. It is not in the downloads yet; for now it has to be built from the <code>tv-app</code> folder in the source.</p>
+
+      <h2 id="updates">Updates</h2>
+      <p>The desktop app checks for a new version when it opens and offers it in a card with the list of changes. You can also check under <strong>Settings, Desktop app</strong>. See the <a href="changelog.html">changelog</a> for what each version changed.</p>
+      <p>For a server, pull the new code and rebuild:</p>
+      <pre><code>git pull
+docker compose up -d --build</code></pre>
+      <p>Your library and accounts are kept. The database updates itself on the first start of a new version.</p>
+
+      <h2 id="backup">Backups</h2>
+      <p>Your music files are never changed unless you edit tags, so back them up however you already do. Everything else, including accounts, playlists, ratings and history, lives in one data folder:</p>
+      <table>
+        <tr><th>Setup</th><th>Where the data is</th></tr>
+        <tr><td>Desktop app, Windows</td><td><code>%APPDATA%\Localhost Music</code></td></tr>
+        <tr><td>Desktop app, Linux</td><td><code>~/.config/Localhost Music</code></td></tr>
+        <tr><td>Docker</td><td>the <code>lhm-data</code> volume</td></tr>
+        <tr><td>Without Docker</td><td>the folder you set as <code>DATA_DIR</code></td></tr>
+      </table>
+      <p>Stop the app or server, copy that folder somewhere safe, and start it again. To restore, put the folder back.</p>
+
+      <h2 id="internet">Outside your home</h2>
+      <p>To reach a server from outside your network, put it behind a reverse proxy that provides HTTPS, such as Caddy or nginx, and:</p>
+      <ul>
+        <li>set <code>TRUST_PROXY=1</code>, so the sign-in limiter sees real addresses and cookies are marked secure;</li>
+        <li>use a strong admin password;</li>
+        <li>keep <strong>Show all users on the sign-in page</strong> turned off.</li>
+      </ul>
+      <p>Album covers and artist photos can be fetched without signing in, so that lock screens and car displays can show them. Everything else needs an account.</p>
+
+      <h2 id="trouble">Troubleshooting</h2>
+      <h3>My phone or TV can't reach the app on my computer</h3>
+      <p>Check that <strong>Let other devices on my network connect</strong> is on, the app is open, and both devices are on the same network. On Windows, allow the app through the firewall when asked. The address can change when your router restarts; the app always shows the current one.</p>
+      <h3>Songs are missing</h3>
+      <p>Run <strong>Rescan library</strong> in Settings. Files the scanner could not read are listed under <strong>Settings, Library health</strong> with the reason.</p>
+      <h3>The desktop app says the library stopped</h3>
+      <p>The message includes the last lines of its log. The full log is <code>server.log</code> in the app's data folder, listed under <a href="#backup">Backups</a>.</p>
+      <h3>Something else</h3>
+      <p><a href="https://github.com/localhostmusic/localhostmusic/issues">Open an issue on GitHub</a> and say what you did, what happened, and which version you are on. The version is at the bottom of the sidebar.</p>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>Localhost Music is free and open source, under the GNU AGPL v3.</span>
+    <span><a href="https://github.com/localhostmusic/localhostmusic">Source</a> · <a href="https://github.com/localhostmusic/localhostmusic/issues">Report a problem</a> · <a href="https://github.com/localhostmusic/localhostmusic/blob/main/THIRD-PARTY-NOTICES.md">Credits</a></span>
+  </div>
+</footer>
+<script src="site.js" defer></script>
+</body>
+</html>

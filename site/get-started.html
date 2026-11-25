@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Get started with Localhost Music</title>
+<meta name="description" content="Install Localhost Music on one computer, share it with your phone and TV, or run it as an always-on server.">
+<meta property="og:title" content="Get started with Localhost Music">
+<meta property="og:description" content="Install Localhost Music on one computer, share it with your phone and TV, or run it as an always-on server.">
+<meta property="og:image" content="https://localhostmusic.github.io/localhostmusic/social-preview.png">
+<meta name="theme-color" content="#0a0a0c">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="./"><img src="logo.svg" alt=""><b>localhost<span>music</span></b></a>
+    <nav class="nav" aria-label="Main">
+      <a href="get-started.html" aria-current="page">Get started</a>
+      <a href="docs.html">Docs</a>
+      <a href="changelog.html">Changelog</a>
+      <a href="https://github.com/localhostmusic/localhostmusic">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+<div class="wrap">
+  <h1>Get started</h1>
+  <p class="sub">Pick the setup that matches how you want to listen. The first one takes about two minutes.</p>
+  <div class="layout">
+    <nav class="toc" aria-label="On this page">
+      <a href="#downloads">Downloads</a>
+      <a href="#one-computer">On one computer</a>
+      <a href="#other-devices">Phone and TV</a>
+      <a href="#server">Always-on server</a>
+      <a href="#docker">With Docker</a>
+      <a href="#without-docker">Without Docker</a>
+    </nav>
+    <div class="prose">
+
+      <h2 id="downloads">Downloads</h2>
+      <p>The current version is <strong data-version>the latest release</strong>. The app updates itself after this.</p>
+      <div class="downloads">
+        <a class="dl" href="https://github.com/localhostmusic/localhostmusic/releases/latest" data-download="windows"><b>Windows</b><span>Installer</span><span data-meta></span></a>
+        <a class="dl" href="https://github.com/localhostmusic/localhostmusic/releases/latest" data-download="appimage"><b>Linux</b><span>AppImage, runs on most systems</span><span data-meta></span></a>
+        <a class="dl" href="https://github.com/localhostmusic/localhostmusic/releases/latest" data-download="deb"><b>Debian and Ubuntu</b><span>.deb package</span><span data-meta></span></a>
+      </div>
+      <p>There is also a <a href="https://github.com/localhostmusic/localhostmusic/releases/latest" data-download="portable">portable Windows version</a> that runs without installing. There is no macOS build yet.</p>
+      <div class="callout"><p><strong>Windows will warn you the first time.</strong> The app is not signed with a paid certificate yet, so Windows shows "Windows protected your PC". Click <strong>More info</strong>, then <strong>Run anyway</strong>.</p></div>
+
+      <h2 id="one-computer">On one computer</h2>
+      <p>This is all most people need. Nothing else has to be installed.</p>
+      <ol class="steps">
+        <li><strong>Install and open the app.</strong> On Linux with the AppImage, make the file executable first: right-click it, open Properties, and allow it to run as a program.</li>
+        <li><strong>Click "Choose your music folder"</strong> and pick the folder that holds your music. Subfolders are included.</li>
+        <li><strong>Wait for the scan.</strong> A few thousand songs take about a minute. Albums appear as they are found.</li>
+      </ol>
+      <p>There is no sign-in in this setup. To use a different folder later, go to <strong>Settings</strong> and change the music folder there.</p>
+
+      <h2 id="other-devices">On your phone and TV too</h2>
+      <p>The app on your computer can share its library with other devices on the same Wi-Fi or router. It works while the app is open.</p>
+      <ol class="steps">
+        <li>In the app, open <strong>Settings</strong> and find <strong>Other devices</strong>. Turn on <strong>Let other devices on my network connect</strong>. If Windows asks whether to allow network access, choose Allow.</li>
+        <li>Under <strong>Users</strong>, add a name and password. This is what you sign in with on the other device.</li>
+        <li>On the phone or TV, open a browser and enter the address the app shows. It looks like <code>http://192.168.1.20:47821</code>.</li>
+        <li>Sign in with the name and password from step 2.</li>
+      </ol>
+      <p>On a phone, use your browser's <strong>Add to Home Screen</strong> to get an app icon. The player keeps working with the screen locked.</p>
+
+      <h2 id="server">An always-on server</h2>
+      <p>Choose this if you want the library available when your computer is off, or reachable from outside your home. You run the server on a machine that stays on, and every device connects to it, including the desktop app.</p>
+
+      <h3 id="docker">With Docker</h3>
+      <p>You need <a href="https://docs.docker.com/get-docker/">Docker</a> and the project's files.</p>
+      <pre><code>git clone https://github.com/localhostmusic/localhostmusic.git
+cd localhostmusic</code></pre>
+      <ol class="steps">
+        <li>Open <code>docker-compose.yml</code> and change <code>./music</code> to the folder that holds your music.</li>
+        <li>Start it:
+          <pre><code>docker compose up -d --build</code></pre>
+        </li>
+        <li>Get the admin password, which is created and shown once on the first start:
+          <pre><code>docker compose logs localhostmusic</code></pre>
+        </li>
+        <li>Open <code>http://localhost:8585</code> on that machine, or <code>http://its-address:8585</code> from another device, and sign in as <code>admin</code>.</li>
+      </ol>
+
+      <h3 id="without-docker">Without Docker</h3>
+      <p>You need <a href="https://nodejs.org">Node.js 24</a> or newer and <a href="https://ffmpeg.org/download.html">FFmpeg</a>. These steps are for Linux and macOS. On Windows, the desktop app with <a href="#other-devices">sharing turned on</a> is the simpler route.</p>
+      <pre><code>git clone https://github.com/localhostmusic/localhostmusic.git
+cd localhostmusic
+
+# Build the player
+cd web
+npm ci
+npm run build
+
+# Build the server and give it the player
+cd ../server
+npm ci
+npm run build
+cp -r ../web/dist public</code></pre>
+      <p>Then start it, with your own folders in place of the examples:</p>
+      <pre><code>MUSIC_DIR=/path/to/your/music \
+DATA_DIR=/path/to/a/folder/for/its/data \
+node dist/index.js</code></pre>
+      <p>The first start prints the admin password once. Open <code>http://localhost:8585</code> and sign in as <code>admin</code>. Use the same Node.js version to install and to run; if you upgrade Node.js, run <code>npm ci</code> in <code>server</code> again.</p>
+
+      <div class="callout"><p><strong>Before opening a server to the internet:</strong> put it behind HTTPS with a reverse proxy, set <code>TRUST_PROXY=1</code>, and change the admin password. The <a href="docs.html#internet">docs</a> have the details.</p></div>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap">
+    <span>Localhost Music is free and open source, under the GNU AGPL v3.</span>
+    <span><a href="https://github.com/localhostmusic/localhostmusic">Source</a> · <a href="https://github.com/localhostmusic/localhostmusic/issues">Report a problem</a> · <a href="https://github.com/localhostmusic/localhostmusic/blob/main/THIRD-PARTY-NOTICES.md">Credits</a></span>
+  </div>
+</footer>
+<script src="site.js" defer></script>
+</body>
+</html>
