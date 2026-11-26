@@ -1,5 +1,6 @@
 import type Database from "better-sqlite3";
-import { readdirSync, statSync, existsSync } from "node:fs";
+import { existsSync } from "node:fs";
+import { readdir, stat } from "node:fs/promises";
 import { join, extname } from "node:path";
 import { execFile } from "node:child_process";
 import { readTags } from "./tags.js";
@@ -49,8 +50,10 @@ function scanWithSidecar(bin: string, musicDir: string, dataDir: string): Promis
   });
 }
 
-function* walk(dir: string): Generator<string> {
-  for (const e of readdirSync(dir, { withFileTypes: true })) {
+// Asynchronous on purpose: a blocking walk of a library on a sleeping or slow drive
+// would freeze the server until the drive answered.
+async function* walk(dir: string): AsyncGenerator<string> {
+  for (const e of await readdir(dir, { withFileTypes: true })) {
     const p = join(dir, e.name);
     if (e.isDirectory()) yield* walk(p);
     else if (AUDIO.has(extname(e.name).toLowerCase())) yield p;
@@ -147,9 +150,9 @@ async function scanWithJs(db: Database.Database, musicDir: string, dataDir: stri
   });
   const pendingCredits: { id: number; artists: string[] }[] = [];
 
-  for (const path of walk(musicDir)) {
+  for await (const path of walk(musicDir)) {
     try {
-      const st = statSync(path);
+      const st = await stat(path);
       const existing = getTrack.get(path) as any;
       if (existing && existing.mtime === Math.floor(st.mtimeMs) && existing.size === st.size) {
         if (existing.credits_v < CREDITS_VERSION) {

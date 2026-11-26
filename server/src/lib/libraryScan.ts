@@ -1,6 +1,6 @@
 import type Database from "better-sqlite3";
 import { pruneEmpty } from "./prune.js";
-import { existsSync } from "node:fs";
+import { access } from "node:fs/promises";
 import { scanLibrary, type ScanResult } from "../scanner/scan.js";
 import { classifyAudiobooks } from "./audiobooks.js";
 import { getSettings } from "./settings.js";
@@ -56,14 +56,14 @@ async function runScan(
   const s = getSettings(db);
   const roots = [s.musicDir];
   let { added, issues, recredited } = await scanLibrary(db, s.musicDir, dataDir);
-  if (s.audiobookDir && s.audiobookDir !== s.musicDir && existsSync(s.audiobookDir)) {
+  if (s.audiobookDir && s.audiobookDir !== s.musicDir && await access(s.audiobookDir).then(() => true, () => false)) {
     const r = await scanLibrary(db, s.audiobookDir, dataDir);
     added += r.added; issues += r.issues; recredited += r.recredited;
     roots.push(s.audiobookDir);
   }
   // Neither scanner removes anything, so drop rows whose file no longer exists.
   // Otherwise a moved file's new path scans in as a duplicate.
-  const missing = pruneMissing(db, roots);
+  const missing = await pruneMissing(db, roots);
   for (const why of missing.skipped) console.warn(`[lhm] skipped missing-file prune for ${why}`);
   const books = classifyAudiobooks(db, s.audiobookDir);
   // After classification, so audiobook "genres" stay out of the music index.

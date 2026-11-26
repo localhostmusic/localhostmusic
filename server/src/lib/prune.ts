@@ -1,5 +1,5 @@
 import type Database from "better-sqlite3";
-import { existsSync, readdirSync } from "node:fs";
+import { access, readdir } from "node:fs/promises";
 import { resolve, sep } from "node:path";
 
 // A scan that finds more than this share of a root's tracks missing treats the
@@ -12,7 +12,11 @@ export interface MissingPrune { tracks: number; skipped: string[]; }
 // a moved or deleted file otherwise leaves a ghost row, plus a duplicate at the new
 // path. Only tracks under `roots` are considered. A missing or empty root is
 // skipped, so a scan while the library is unmounted can't wipe the DB.
-export function pruneMissing(db: Database.Database, roots: string[]): MissingPrune {
+//
+// Every file check is asynchronous. A library on a sleeping or slow drive can take
+// many seconds to answer, and a blocking check would freeze the whole server for
+// that long.
+export async function pruneMissing(db: Database.Database, roots: string[]): Promise<MissingPrune> {
   const skipped: string[] = [];
   let removed = 0;
 
@@ -20,16 +24,16 @@ export function pruneMissing(db: Database.Database, roots: string[]): MissingPru
     if (!raw) continue;
     const root = resolve(raw);
     // An unmounted mountpoint still exists and reads as empty. Trust neither.
-    if (!existsSync(root)) { skipped.push(`${root} (missing)`); continue; }
+    if (!(await exists(root))) { skipped.push(`${root} (missing)`); continue; }
     let empty = true;
-    try { empty = readdirSync(root).length === 0; } catch { skipped.push(`${root} (unreadable)`); continue; }
+    try { empty = (await readdir(root)).length === 0; } catch { skipped.push(`${root} (unreadable)`); continue; }
     if (empty) { skipped.push(`${root} (empty)`); continue; }
 
     const under = db.prepare("SELECT id,path FROM tracks WHERE path LIKE ? ESCAPE '\\'")
       .all(likePrefix(root + sep)) as { id: number; path: string }[];
     if (!under.length) continue;
 
-    const gone = under.filter(t => !existsSync(t.path));
+    const gone = await missingFiles(under);
     if (!gone.length) continue;
     if (gone.length / under.length > MAX_MISSING_SHARE) {
       skipped.push(`${root} (${gone.length}/${under.length} missing, looks unmounted, not deleted)`);
@@ -55,6 +59,23 @@ export function pruneMissing(db: Database.Database, roots: string[]): MissingPru
   }
 
   return { tracks: removed, skipped };
+}
+
+const exists = (p: string) => access(p).then(() => true, () => false);
+
+// Which of these rows have no file on disk. A few checks run at a time: enough to
+// get through a large library quickly, few enough not to flood a slow drive.
+async function missingFiles<T extends { path: string }>(rows: T[]): Promise<T[]> {
+  const gone: T[] = [];
+  let next = 0;
+  const worker = async () => {
+    while (next < rows.length) {
+      const row = rows[next++];
+      if (!(await exists(row.path))) gone.push(row);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(8, rows.length) }, worker));
+  return gone;
 }
 
 // LIKE treats _ and % as wildcards, and paths legitimately contain both.
