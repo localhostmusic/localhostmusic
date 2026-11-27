@@ -8,6 +8,7 @@ import { NowPlaying } from "./player/NowPlaying";
 import { LyricsPanel } from "./player/LyricsPanel";
 import { QueuePanel } from "./player/QueuePanel";
 import { MediaSession } from "./player/MediaSession";
+import { StayReachable } from "./player/StayReachable";
 import { KeyboardShortcuts } from "./player/KeyboardShortcuts";
 import { Sidebar, navRoot, NAV, type ViewName } from "./ui/Sidebar";
 import { PageTabs, tabGroupOf, TAB_GROUPS } from "./ui/PageTabs";
@@ -423,6 +424,7 @@ export default function App() {
       <AdaptiveTheme />
       <NightcoreOverlay />
       <MediaSession />
+      <StayReachable />
       <KeyboardShortcuts playerOpen={expanded} />
       <CommandPalette
         isAdmin={user.isAdmin} disabled={expanded}

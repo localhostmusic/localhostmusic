@@ -1,3 +1,4 @@
+import { stayReachableOn } from "../player/StayReachable";
 import { useEffect, useRef, useState } from "react";
 import type { ViewName } from "../ui/Sidebar";
 import { DownloadIcon, ChartIcon, RequestIcon, GearIcon, LogoutIcon, ChevronDownIcon, LyricsIcon } from "../ui/icons";
@@ -57,6 +58,7 @@ export function AccountPage({ username, isAdmin, onNavigate, onLogout }: {
   onNavigate: (v: ViewName) => void;
   onLogout: () => void;
 }) {
+  const stayReachable = stayReachableOn();
   const vpFill = (() => { try { return localStorage.getItem("lhm-vpfill") !== "0"; } catch { return true; } })();
   const debugPanel = (() => { try { return localStorage.getItem("lhm-debug") === "1"; } catch { return false; } })();
   const { streamQuality, setStreamQuality, crossfade, setCrossfade, normalize, setNormalize, weightedShuffle, setWeightedShuffle } = usePlayer();
@@ -266,6 +268,22 @@ export function AccountPage({ username, isAdmin, onNavigate, onLogout }: {
               location.reload();
             }}
             aria-label="Show the debug panel"
+          ><span className="switch-knob" /></button>
+        </label>
+        <label className="toggle-row">
+          <span className="toggle-text">
+            <span className="toggle-label">Experimental: stay reachable when locked</span>
+            <span className="toggle-hint">For a phone playing through a speaker. After the music stops, the phone stays connected for 10 minutes so another device can start the next song on it. Uses a little battery. Reloads the app.</span>
+          </span>
+          <button
+            type="button"
+            className={`switch${stayReachable ? " on" : ""}`}
+            role="switch" aria-checked={stayReachable}
+            onClick={() => {
+              try { localStorage.setItem("lhm-stay-reachable", stayReachable ? "0" : "1"); } catch { /* */ }
+              location.reload();
+            }}
+            aria-label="Stay reachable when locked"
           ><span className="switch-knob" /></button>
         </label>
         <label className="toggle-row">
