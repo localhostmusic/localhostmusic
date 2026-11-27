@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { PlayIcon, HeartIcon, QueueIcon, NextIcon, RadioIcon, AlbumIcon, EditIcon, TrashIcon } from "../ui/icons";
+import { PlayIcon, HeartIcon, QueueIcon, NextIcon, RadioIcon, AlbumIcon, ArtistIcon, EditIcon, TrashIcon } from "../ui/icons";
 import { openMenuAt, openMenuFrom, type MenuSpec } from "../ui/ContextMenu";
 import { useRowSelect, selectionMenu, toggleSelected } from "../ui/selection";
 import { MarqueeText } from "../ui/MarqueeText";
@@ -120,6 +120,13 @@ export function TrackRow({ tracks, i, onPlay, onOpenAlbum, isCurrent, isPlaying,
         { label: isFav ? "Remove from Favorites" : "Add to Favorites", icon: <HeartIcon size={16} filled={isFav} />, onSelect: actFav },
         ...(t.albumId != null && onOpenAlbum && !hideAlbum
           ? [{ label: "Go to album", icon: <AlbumIcon size={16} />, onSelect: () => onOpenAlbum(t.albumId) }] : []),
+        // On a phone the names under the title are not links (a slightly low tap on
+        // the song would open the artist), so the artists are reached from here.
+        ...(onOpenArtist && credits?.length
+          ? credits.map(a => ({
+              label: credits.length > 1 ? `Go to ${a.name}` : "Go to artist",
+              icon: <ArtistIcon size={16} />, onSelect: () => onOpenArtist(a.id, a.name),
+            })) : []),
         { label: "Select", icon: <span className="ctx-check">✓</span>, onSelect: () => toggleSelected(tracks, i) },
       ],
       [

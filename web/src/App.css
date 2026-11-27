@@ -1516,6 +1516,10 @@ body.dragging-track .nav-item.nav-sub {
   cursor: pointer;
 }
 .trk-artist-link:hover { color: var(--text); text-decoration: underline; }
+/* Touch screens: the names sit right under the song title, and a tap that lands a
+   little low opened the artist when the song was meant. There the whole row plays,
+   and the artists are in the row's menu. */
+@media (hover: none) { .trk-artist-link { pointer-events: none; } }
 .trk-album {
   /* Shrinks about 10x faster than the title, so the album ellipsises first. */
   flex: 0 10 190px; min-width: 0; text-align: left; background: none; border: none;
